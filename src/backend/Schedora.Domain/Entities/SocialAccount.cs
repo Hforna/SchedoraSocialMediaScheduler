@@ -3,7 +3,7 @@
 public class SocialAccount : Entity
 {
     public long UserId { get; set;  }
-    public string Plataform { get; set; }
+    public string Platform { get; set; }
     public string PlatformUserId { get; set; }
     public string UserName { get; set; }
     public string DisplayName { get; set; }

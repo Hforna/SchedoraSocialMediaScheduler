@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Schedora.Domain.Entities
 {
-    public class PostPlataform : Entity
+    public class PostPlatform : Entity
     {
         public Guid PostId { get; private set; }
         public Guid SocialAccountId { get; private set; }

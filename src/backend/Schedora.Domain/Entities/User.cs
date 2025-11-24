@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Schedora.Domain.Entities;
 
-public class User : IdentityUser<long>
+public class User : IdentityUser<long>, IEntity
 {
     public bool IsActive { get; set; } = true;
     public string? RefreshToken { get; set; }
