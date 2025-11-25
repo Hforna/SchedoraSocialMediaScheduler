@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Schedora.Domain.Exceptions;
 
 namespace Schedora.Domain.ValueObjects
 {
@@ -18,15 +19,15 @@ namespace Schedora.Domain.ValueObjects
         public static Email Create(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("Email cannot be empty");
+                throw new DomainException("Email cannot be empty");
 
             if (!IsValidEmail(email))
-                throw new ArgumentException("Invalid email format");
+                throw new DomainException("Invalid email format");
 
             return new Email(email.ToLowerInvariant().Trim());
         }
 
-        private static bool IsValidEmail(string email)
+        public static bool IsValidEmail(string email)
         {
             try
             {

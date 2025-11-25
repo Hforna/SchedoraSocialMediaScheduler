@@ -4,4 +4,27 @@
     build:
       context: .
       dockerfile: src/backend/Schedora.WebApi/Dockerfile
+    depends_on:
+      - sqlserver
+    networks:
+      - backend
 
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserver
+    ports:
+      - 1433:1433
+    restart: always
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - backend
+    environment:
+      - MSSQL_SA_PASSWORD=hG5rzck2vy3cHai
+      - ACCEPT_EULA=Y
+
+volumes:
+  sqlserver_data:
+    
+networks:
+  backend:

@@ -1,0 +1,22 @@
+# This is a generated file. Not intended for manual editing.
+services:
+  schedora.webapi:
+    build:
+      context: "C:\\Users\\Henrique\\Desktop\\SchedoraSocialMedia\\Schedora"
+      dockerfile: "src/backend/Schedora.WebApi/Dockerfile"
+      target: "base"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net9.0/Schedora.WebApi.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    image: "schedora.webapi:dev"
+    ports: []
+    volumes:
+    - "C:\\Users\\Henrique\\Desktop\\SchedoraSocialMedia\\Schedora\\src\\backend\\\
+      Schedora.WebApi:/app:rw"
+    - "C:\\Users\\Henrique\\Desktop\\SchedoraSocialMedia\\Schedora:/src:rw"
+    - "C:\\Users\\Henrique\\.nuget\\packages:/home/app/.nuget/packages"
+    working_dir: "/app"

@@ -1,0 +1,39 @@
+services:
+  schedora.webapi:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+    ports:
+      - "8080"
+      - "8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    networks:
+      - backend
+    depends_on:
+      - sqlserver
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserver
+    ports:
+      - 1433:1433
+    restart: always
+    volumes: 
+     - sqlserver_data:/var/opt/mssql
+    networks:
+     - backend
+    environment:
+     - MSSQL_SA_PASSWORD=hG5rzck2vy3cHai
+     - ACCEPT_EULA=Y
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  sqlserver_data:

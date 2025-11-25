@@ -1,0 +1,102 @@
+﻿@model ConfirmAccountEmailModel
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your Account</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f7fa;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f7fa; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); overflow: hidden;">
+                    
+                    <!-- Header with gradient -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 50px 40px; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">
+                                Welcome to @Model.CompanyName!
+                            </h1>
+                            <p style="margin: 15px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 16px;">
+                                You're almost there!
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main content -->
+                    <tr>
+                        <td style="padding: 50px 40px;">
+                            <p style="margin: 0 0 20px 0; color: #333333; font-size: 18px; line-height: 1.6;">
+                                Hi <strong>@Model.UserName</strong>,
+                            </p>
+                            
+                            <p style="margin: 0 0 30px 0; color: #666666; font-size: 16px; line-height: 1.6;">
+                                Thank you for signing up! We're excited to have you on board. To get started, please confirm your email address by clicking the button below:
+                            </p>
+                            
+                            <!-- Confirmation button -->
+                            <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center" style="padding: 10px 0 30px 0;">
+                                        <a href="@Model.ConfirmationUrl" 
+                                           style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; padding: 16px 48px; border-radius: 8px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: transform 0.2s;">
+                                            Confirm Your Account
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Info box -->
+                            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-left: 4px solid #667eea; border-radius: 6px; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <p style="margin: 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                                            ⏰ <strong>Important:</strong> This link will expire in @Model.ExpirationHours hours for security reasons.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Alternative link -->
+                            <p style="margin: 0 0 10px 0; color: #999999; font-size: 13px; line-height: 1.6;">
+                                If the button doesn't work, copy and paste this link into your browser:
+                            </p>
+                            <p style="margin: 0; word-break: break-all;">
+                                <a href="@Model.ConfirmationUrl" 
+                                   style="color: #667eea; text-decoration: none; font-size: 13px;">
+                                    @Model.ConfirmationUrl
+                                </a>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8f9fa; padding: 30px 40px; border-top: 1px solid #e9ecef;">
+                            <p style="margin: 0 0 10px 0; color: #999999; font-size: 13px; line-height: 1.6;">
+                                If you didn't create an account with @Model.CompanyName, you can safely ignore this email.
+                            </p>
+                            <p style="margin: 0; color: #999999; font-size: 13px; line-height: 1.6;">
+                                Best regards,<br>
+                                <strong>The @Model.CompanyName Team</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Copyright -->
+                    <tr>
+                        <td style="padding: 20px 40px; text-align: center;">
+                            <p style="margin: 0; color: #cccccc; font-size: 12px;">
+                                © @DateTime.Now.Year @Model.CompanyName. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

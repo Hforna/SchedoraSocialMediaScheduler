@@ -1,0 +1,8 @@
+services:
+  schedora.webapi:
+    image: ${DOCKER_REGISTRY-}schedorawebapi
+    build:
+      context: .
+      dockerfile: src/backend/Schedora.WebApi/Dockerfile
+
+  
