@@ -24,7 +24,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RegisterUser([FromBody]UserRegisterRequest request)
     {
         var confirmEmailEndpoint = _linkGenerator.GetPathByName(HttpContext, "ConfirmEmail");
-        var uri = $"{HttpContext.GetBaseUri()}{confirmEmailEndpoint}";
+        var uri = $"{HttpContext.GetBaseUri()}{confirmEmailEndpoint[1..]}";
         _logger.LogInformation("Email uri to confirm email {uri}", uri);
         var result = await _authService.RegisterUser(request, uri);
 
@@ -35,6 +35,8 @@ public class AuthController : ControllerBase
     [EndpointName("ConfirmEmail")]
     public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
     {
+        await _authService.ConfirmEmail(email, token);
+
         return Ok();
     }
 }

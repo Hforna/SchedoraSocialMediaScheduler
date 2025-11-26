@@ -20,4 +20,14 @@ public class GenericRepository : BaseRepository, IGenericRepository
     {
         await _context.Set<T>().AddAsync(entity);
     }
+
+    public void Update<T>(T entity) where T : class, IEntity
+    {
+        _context.Set<T>().Update(entity);
+    }
+
+    public void DeleteRange<T>(List<T> entities) where T : class, IEntity
+    {
+        _context.Set<T>().RemoveRange(entities);
+    }
 }

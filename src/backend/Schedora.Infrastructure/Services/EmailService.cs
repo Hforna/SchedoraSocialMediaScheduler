@@ -15,9 +15,19 @@ public class EmailService : IEmailService
     public EmailService(IOptions<SmtpConfigurations> smtp)
     {
         _smtpConfigurations = smtp.Value;
-        
-        var infrastructurePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-        var templatePath = Path.Combine(infrastructurePath, "EmailTemplates");
+
+        var root = AppContext.BaseDirectory;
+        var templatePath = Path.Combine(root, "EmailTemplates");
+
+        Console.WriteLine("RazorLight base path:");
+        Console.WriteLine(templatePath);
+
+        if (!Directory.Exists(templatePath))
+            throw new Exception($"EmailTemplates não encontrado: {templatePath}");
+
+        foreach (var file in Directory.GetFiles(templatePath))
+            Console.WriteLine("Arquivo encontrado: " + Path.GetFileName(file));
+
 
         _razorEngine = new RazorLightEngineBuilder()
             .UseFileSystemProject(templatePath)

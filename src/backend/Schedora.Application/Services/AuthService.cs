@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Schedora.Application.Requests;
 using Schedora.Application.Responses;
@@ -9,12 +10,14 @@ using Schedora.Domain.Exceptions;
 using Schedora.Domain.Interfaces;
 using Schedora.Domain.Services;
 using Schedora.Domain.ValueObjects;
+using System.Text;
 
 namespace Schedora.Application.Services;
 
 public interface IAuthService
 {
     public Task<UserResponse> RegisterUser(UserRegisterRequest request, string uri);
+    public Task ConfirmEmail(string email, string token);
 }
 
 public class AuthService : IAuthService
@@ -52,20 +55,43 @@ public class AuthService : IAuthService
 
         var user = _mapper.Map<User>(request);
         user.PasswordHash = _cryptography.HashPassword(request.Password);
+        user.SecurityStamp = Guid.NewGuid().ToString();
 
+        var usersNotActive = await _uow.UserRepository.GetUsersNotActiveByEmail(request.Email);
+        if(usersNotActive.Any())
+            _uow.GenericRepository.DeleteRange<User>(usersNotActive);
         await _uow.GenericRepository.Add<User>(user);
         await _uow.Commit();
 
         var tokenConfirmation = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var uriWithToken = $"{uri}?email={user.Email}&token={tokenConfirmation}";
+        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(tokenConfirmation));
+        var uriWithToken = $"{uri}?email={user.Email}&token={encodedToken}";
         
         var emailMessage = await _emailService.RenderEmailConfirmation(
             user.UserName!, 
-            uri, 
+            uriWithToken, 
             CompanyConstraints.CompanyName, 
             24);
         await _emailService.SendEmail(user.Email, user.UserName, emailMessage, $"Hi {user.UserName} confirm your e-mail here");
 
         return _mapper.Map<UserResponse>(user);
+    }
+
+    public async Task ConfirmEmail(string email, string token)
+    {
+        var user = await _uow.UserRepository.UserByEmail(email)
+            ?? throw new RequestException("User with this e-mail has not been found");
+
+        var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+        var validateEmail = await _userManager.ConfirmEmailAsync(user, decodedToken);
+
+        if (!validateEmail.Succeeded)
+            throw new UnauthorizedException(string.Join(", ", validateEmail.Errors.ToList()));
+
+        user.IsActive = true;
+        user.EmailConfirmed = true;
+
+        _uow.GenericRepository.Update<User>(user);
+        await _uow.Commit();
     }
 }

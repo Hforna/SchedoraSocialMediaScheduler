@@ -9,6 +9,7 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["src/backend/Schedora.WebApi/Schedora.WebApi.csproj", "src/backend/Schedora.WebApi/"]
 RUN dotnet restore "src/backend/Schedora.WebApi/Schedora.WebApi.csproj"
+COPY ["src/backend/Schedora.Infrastructure/", "src/backend/Schedora.Infrastructure/"]
 COPY . .
 WORKDIR "/src/src/backend/Schedora.WebApi"
 RUN dotnet build "./Schedora.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
@@ -16,6 +17,7 @@ RUN dotnet build "./Schedora.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/buil
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./Schedora.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+COPY --from=build /src/src/backend/Schedora.Infrastructure/EmailTemplates/ /app/publish/EmailTemplates/
 
 FROM base AS final
 WORKDIR /app
