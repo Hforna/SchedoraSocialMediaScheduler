@@ -9,8 +9,8 @@ namespace Schedora.Domain.Entities
     public class TeamMember : Entity
     {
         // Properties
-        public Guid TeamOwnerId { get; private set; }
-        public Guid MemberUserId { get; private set; }
+        public long TeamOwnerId { get; private set; }
+        public long MemberUserId { get; private set; }
         public TeamRole Role { get; private set; }
         public DateTime InvitedAt { get; private set; }
         public DateTime? JoinedAt { get; private set; }
@@ -24,7 +24,7 @@ namespace Schedora.Domain.Entities
         private TeamMember() { }
 
         // Factory method
-        public static TeamMember Create(Guid teamOwnerId, Guid memberUserId, TeamRole role)
+        public static TeamMember Create(long teamOwnerId, long memberUserId, TeamRole role)
         {
             return new TeamMember
             {

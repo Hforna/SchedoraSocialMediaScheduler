@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Schedora.Domain.Entities;
+using Schedora.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace Schedora.Infrastructure.Persistence
                 .IsRequired()
                 .HasConversion<string>()
                 .HasMaxLength(50)
-                .HasDefaultValue("draft");
+                .HasDefaultValue(PostStatus.Draft);
 
             builder.Property(p => p.ScheduledTimezone)
                 .HasMaxLength(50);
@@ -38,7 +39,7 @@ namespace Schedora.Infrastructure.Persistence
             builder.Property(p => p.ApprovalStatus)
                 .HasConversion<string>()
                 .HasMaxLength(50)
-                .HasDefaultValue("not_required");
+                .HasDefaultValue(ApprovalStatus.NotRequired);
 
             builder.Property(p => p.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
@@ -70,7 +71,7 @@ namespace Schedora.Infrastructure.Persistence
                     .IsRequired()
                     .HasConversion<string>()
                     .HasMaxLength(50)
-                    .HasDefaultValue("pending");
+                    .HasDefaultValue(PostStatus.Pending);
 
                 builder.Property(pp => pp.PlatformPostId)
                     .HasMaxLength(255);

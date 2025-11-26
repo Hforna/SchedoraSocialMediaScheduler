@@ -9,8 +9,8 @@ namespace Schedora.Domain.Entities
     public class QueuePost : Entity
     {
         // Properties
-        public Guid QueueId { get; private set; }
-        public Guid PostId { get; private set; }
+        public long QueueId { get; private set; }
+        public long PostId { get; private set; }
         public int OrderIndex { get; private set; }
         public DateTime AddedAt { get; private set; }
 
@@ -22,7 +22,7 @@ namespace Schedora.Domain.Entities
         private QueuePost() { }
 
         // Factory method
-        public static QueuePost Create(Guid queueId, Guid postId, int orderIndex)
+        public static QueuePost Create(long queueId, long postId, int orderIndex)
         {
             return new QueuePost
             {

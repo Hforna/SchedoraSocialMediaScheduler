@@ -9,7 +9,7 @@ namespace Schedora.Domain.Entities
     public class NotificationPreference : Entity
     {
         // Properties
-        public Guid UserId { get; private set; }
+        public long UserId { get; private set; }
         public bool EmailOnPublish { get; private set; }
         public bool EmailOnFailure { get; private set; }
         public bool EmailDailySummary { get; private set; }
@@ -23,7 +23,7 @@ namespace Schedora.Domain.Entities
         private NotificationPreference() { }
 
         // Factory method
-        public static NotificationPreference CreateDefault(Guid userId)
+        public static NotificationPreference CreateDefault(long userId)
         {
             return new NotificationPreference
             {

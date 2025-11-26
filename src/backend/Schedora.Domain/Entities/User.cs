@@ -18,5 +18,5 @@ public class User : IdentityUser<long>, IEntity
 
 public class Role : IdentityRole<long>
 {
-    public Role(string role) : base(role) {}
+    
 }

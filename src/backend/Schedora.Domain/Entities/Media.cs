@@ -8,7 +8,7 @@ namespace Schedora.Domain.Entities
 {
     public class Media : Entity
     {
-        public Guid UserId { get; private set; }
+        public long UserId { get; private set; }
         public string FileName { get; private set; }
         public string? OriginalFileName { get; private set; }
         public long FileSize { get; private set; }
@@ -19,7 +19,7 @@ namespace Schedora.Domain.Entities
         public int? Height { get; private set; }
         public int? Duration { get; private set; }
         public decimal? AspectRatio { get; private set; }
-        public Guid? FolderId { get; private set; }
+        public long? FolderId { get; private set; }
         public string? Tags { get; private set; }
         public string? Description { get; private set; }
         public bool IsProcessed { get; private set; }

@@ -10,7 +10,7 @@ namespace Schedora.Domain.Entities
     public class PostAnalytics : Entity
     {
         // Properties
-        public Guid PostPlatformId { get; private set; }
+        public long PostPlatformId { get; private set; }
         public int Likes { get; private set; }
         public int Comments { get; private set; }
         public int Shares { get; private set; }
@@ -31,7 +31,7 @@ namespace Schedora.Domain.Entities
         private PostAnalytics() { }
 
         // Factory method
-        public static PostAnalytics Create(Guid postPlatformId)
+        public static PostAnalytics Create(long postPlatformId)
         {
             return new PostAnalytics
             {

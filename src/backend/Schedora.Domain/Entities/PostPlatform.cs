@@ -9,8 +9,8 @@ namespace Schedora.Domain.Entities
 {
     public class PostPlatform : Entity
     {
-        public Guid PostId { get; private set; }
-        public Guid SocialAccountId { get; private set; }
+        public long PostId { get; private set; }
+        public long SocialAccountId { get; private set; }
         public Platform Platform { get; private set; }
         public PostStatus Status { get; private set; }
         public string? PlatformPostId { get; private set; }

@@ -10,6 +10,7 @@ namespace Schedora.Domain.Enums
     {
         Draft = 0,
         Scheduled = 1,
+        Pending,
         Publishing = 2,
         Published = 3,
         Failed = 4,

@@ -9,9 +9,9 @@ namespace Schedora.Domain.Entities
     public class MediaFolder : Entity
     {
         // Properties
-        public Guid UserId { get; private set; }
+        public long UserId { get; private set; }
         public string Name { get; private set; }
-        public Guid? ParentFolderId { get; private set; }
+        public long? ParentFolderId { get; private set; }
         public string? Path { get; private set; }
         public string? Color { get; private set; }
         public string? Icon { get; private set; }
@@ -31,7 +31,7 @@ namespace Schedora.Domain.Entities
         }
 
         // Factory method
-        public static MediaFolder Create(Guid userId, string name, Guid? parentFolderId = null)
+        public static MediaFolder Create(long userId, string name, long? parentFolderId = null)
         {
             return new MediaFolder
             {
@@ -49,7 +49,7 @@ namespace Schedora.Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
-        public void Move(Guid? newParentFolderId)
+        public void Move(long? newParentFolderId)
         {
             ParentFolderId = newParentFolderId;
             UpdatedAt = DateTime.UtcNow;

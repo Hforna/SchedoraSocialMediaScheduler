@@ -9,7 +9,7 @@ namespace Schedora.Domain.Entities
     public class Template : Entity
     {
         // Properties
-        public Guid UserId { get; private set; }
+        public long UserId { get; private set; }
         public string Name { get; private set; }
         public string? Content { get; private set; }
         public string? Platforms { get; private set; } // JSON array
@@ -27,7 +27,7 @@ namespace Schedora.Domain.Entities
         }
 
         // Factory method
-        public static Template Create(Guid userId, string name, string content, string? category = null)
+        public static Template Create(long userId, string name, string content, string? category = null)
         {
             return new Template
             {

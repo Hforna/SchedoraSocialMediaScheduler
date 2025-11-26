@@ -9,10 +9,10 @@ namespace Schedora.Domain.Entities
     public class ActivityLog : Entity
     {
         // Properties
-        public Guid UserId { get; private set; }
+        public long UserId { get; private set; }
         public string Action { get; private set; }
         public string? EntityType { get; private set; }
-        public Guid? EntityId { get; private set; }
+        public long? EntityId { get; private set; }
         public string? Details { get; private set; } // JSON
         public string? IpAddress { get; private set; }
         public string? UserAgent { get; private set; }
@@ -25,10 +25,10 @@ namespace Schedora.Domain.Entities
 
         // Factory method
         public static ActivityLog Create(
-            Guid userId,
+            long userId,
             string action,
             string? entityType = null,
-            Guid? entityId = null,
+            long? entityId = null,
             string? details = null,
             string? ipAddress = null,
             string? userAgent = null)

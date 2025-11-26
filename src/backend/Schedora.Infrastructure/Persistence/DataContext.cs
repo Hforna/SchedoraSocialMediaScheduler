@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 using Schedora.Domain;
 using Schedora.Domain.Entities;
 using static Schedora.Infrastructure.Persistence.PostConfiguration;
@@ -55,5 +57,22 @@ public class DataContext : IdentityDbContext<User, Role, long>
         }
 
         return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public class ProjectDbContextFactory : IDesignTimeDbContextFactory<DataContext>
+    {
+        public DataContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<DataContext>();
+
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), @"..\Schedora.WebApi\appsettings.Development.json"), optional: false, reloadOnChange: true)
+                .Build();
+
+            optionsBuilder.UseSqlServer(configuration.GetConnectionString("sqlserver"));
+
+            return new DataContext(optionsBuilder.Options);
+        }
     }
 }

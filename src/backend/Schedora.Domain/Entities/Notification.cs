@@ -9,13 +9,13 @@ namespace Schedora.Domain.Entities
     public class Notification : Entity
     {
         // Properties
-        public Guid UserId { get; private set; }
+        public long UserId { get; private set; }
         public string Type { get; private set; }
         public string? Title { get; private set; }
         public string? Message { get; private set; }
         public bool IsRead { get; private set; }
         public string? RelatedEntityType { get; private set; }
-        public Guid? RelatedEntityId { get; private set; }
+        public long? RelatedEntityId { get; private set; }
         public string? ActionUrl { get; private set; }
 
         // Navigation Properties
@@ -26,12 +26,12 @@ namespace Schedora.Domain.Entities
 
         // Factory method
         public static Notification Create(
-            Guid userId,
+            long userId,
             string type,
             string title,
             string message,
             string? relatedEntityType = null,
-            Guid? relatedEntityId = null,
+            long? relatedEntityId = null,
             string? actionUrl = null)
         {
             return new Notification

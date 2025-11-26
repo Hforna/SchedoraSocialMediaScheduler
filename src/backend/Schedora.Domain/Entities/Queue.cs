@@ -9,7 +9,7 @@ namespace Schedora.Domain.Entities
     public class Queue : Entity
     {
         // Properties
-        public Guid UserId { get; private set; }
+        public long UserId { get; private set; }
         public string Name { get; private set; }
         public string? Platforms { get; private set; } // JSON array of social account IDs
         public string Schedule { get; private set; } // JSON schedule definition
@@ -29,7 +29,7 @@ namespace Schedora.Domain.Entities
         }
 
         // Factory method
-        public static Queue Create(Guid userId, string name, string schedule, string timezone)
+        public static Queue Create(long userId, string name, string schedule, string timezone)
         {
             return new Queue
             {
