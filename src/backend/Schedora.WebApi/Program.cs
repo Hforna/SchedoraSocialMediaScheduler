@@ -10,7 +10,11 @@ using Schedora.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddRouting(d => d.LowercaseUrls = true);
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication(builder.Configuration);
@@ -48,21 +52,16 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-
-    app.UseSwaggerUI(d =>
-    {
-        d.SwaggerEndpoint("/openapi/v1.json", "OpenAPI V1");
-    });
-
-    app.UseReDoc(d =>
-    {
-        d.SpecUrl("/openapi/v1.json");
-    });
-
-    app.MapScalarApiReference();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.UseAuthentication();
+
+app.MapControllers();
 
 app.Run();
