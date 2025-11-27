@@ -1,0 +1,15 @@
+﻿global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Text;
+global using System.Threading.Tasks;
+global using AutoMapper;
+global using Microsoft.Extensions.Logging;
+global using Schedora.Application.Requests;
+global using Schedora.Application.Responses;
+global using Schedora.Domain.Entities;
+global using Schedora.Domain.Interfaces;
+global using Schedora.Domain.Services;
+global using Schedora.Domain.Exceptions;
+global using Schedora.Domain.ValueObjects;
+global using Schedora.Application.Utils;

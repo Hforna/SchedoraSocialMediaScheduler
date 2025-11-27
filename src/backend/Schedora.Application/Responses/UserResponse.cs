@@ -1,4 +1,4 @@
-﻿using Schedora.Domain.Enums;
+﻿global using Schedora.Domain.Enums;
 
 namespace Schedora.Application.Responses;
 

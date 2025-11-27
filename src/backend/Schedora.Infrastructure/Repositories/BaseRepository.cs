@@ -1,4 +1,4 @@
-﻿using Schedora.Infrastructure.Persistence;
+﻿global using Schedora.Infrastructure.Persistence;
 
 namespace Schedora.Infrastructure.Repositories;
 

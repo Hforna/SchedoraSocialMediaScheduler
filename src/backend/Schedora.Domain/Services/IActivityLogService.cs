@@ -8,6 +8,6 @@ namespace Schedora.Domain.Services
 {
     public interface IActivityLogService
     {
-        public Task LogAsync(long userId, string action, string entityType, long entityId, object? details, bool commit = true);
+        public Task LogAsync(long userId, string action, string entityType, long entityId, object? details = null, bool commit = true);
     }
 }

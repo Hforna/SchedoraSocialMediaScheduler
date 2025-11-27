@@ -24,7 +24,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RegisterUser([FromBody]UserRegisterRequest request)
     {
         var confirmEmailEndpoint = _linkGenerator.GetPathByName(HttpContext, "ConfirmEmail");
-        var uri = $"{HttpContext.GetBaseUri()}{confirmEmailEndpoint[1..]}";
+        var uri = $"{HttpContext.GetBaseUri()}{confirmEmailEndpoint![1..]}";
         _logger.LogInformation("Email uri to confirm email {uri}", uri);
         var result = await _authService.RegisterUser(request, uri);
 
@@ -47,4 +47,20 @@ public class AuthController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPasswordRequest(string email)
+    {
+
+    }
+
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken([FromBody]string refreshToken)
+    {
+        var result = await _authService.RefreshToken(refreshToken);
+
+        return Ok(result);
+    }
+    
+    
 }

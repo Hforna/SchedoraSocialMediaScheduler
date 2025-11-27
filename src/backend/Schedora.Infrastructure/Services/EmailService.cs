@@ -1,9 +1,9 @@
-﻿using MailKit.Net.Smtp;
-using Microsoft.Extensions.Options;
-using MimeKit;
-using RazorLight;
-using Schedora.Domain.Services;
-using Schedora.Infrastructure.EmailTemplates.Models;
+﻿ using MailKit.Net.Smtp;
+ using Microsoft.Extensions.Options;
+ using MimeKit;
+ using RazorLight;
+ using Schedora.Domain.Services;
+ using Schedora.Infrastructure.EmailTemplates.Models;
 
 namespace Schedora.Infrastructure.Services;
 
@@ -43,6 +43,14 @@ public class EmailService : IEmailService
         return await _razorEngine.CompileRenderAsync("ConfirmAccountEmail.cshtml", model);
     }
 
+    public async Task<string> RenderResetPassword(string userName, string companyName, string resetPasswordUrl, int expirationHours)
+    {
+        var model = new ResetPassword()
+        {
+            
+        }
+    }
+
     public async Task SendEmail(string toEmail, string toUserName, string body, string subject)
     {
         var message = new MimeMessage();
@@ -55,7 +63,7 @@ public class EmailService : IEmailService
             Text = body
         };
 
-        using var client = new SmtpClient();
+         using var client = new SmtpClient();
         client.ServerCertificateValidationCallback = (s, c, h, e) => true;
 
         await client.ConnectAsync(_smtpConfigurations.Provider, _smtpConfigurations.Port, true);

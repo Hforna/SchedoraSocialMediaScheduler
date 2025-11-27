@@ -30,6 +30,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Remove="EmailTemplates\Models\ResetPasswordEmailModel.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
       <ProjectReference Include="..\Schedora.Domain\Schedora.Domain.csproj" />
     </ItemGroup>
 

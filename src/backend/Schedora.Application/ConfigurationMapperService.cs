@@ -1,7 +1,7 @@
-﻿using AutoMapper;
-using Schedora.Application.Requests;
-using Schedora.Application.Responses;
-using Schedora.Domain.Entities;
+﻿global using AutoMapper;
+global using Schedora.Application.Requests;
+global using Schedora.Application.Responses;
+global using Schedora.Domain.Entities;
 
 namespace Schedora.Application;
 

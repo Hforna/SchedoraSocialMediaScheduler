@@ -40,12 +40,16 @@ public static class ServicesConfiguration
 
             return new TokenService(
                 scope.ServiceProvider.GetRequiredService<ILogger<ITokenService>>(),
+                scope.ServiceProvider.GetRequiredService<IRequestService>(),
+                scope.ServiceProvider.GetRequiredService<IServiceProvider>(),
                 scope.ServiceProvider.GetRequiredService<TokenValidationParameters>(),
                 configuration.GetValue<string>("services:auth:jwt:signKey")!,
                 configuration.GetValue<int>("services:auth:jwt:expiresAt"));
         });
         services.AddSingleton<IPasswordCryptography, BCryptCryptography>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IRequestService, RequestService>();
+        services.AddScoped<IActivityLogService, ActivityLogService>();
     }
 
     static void AddRepositories(IServiceCollection services)

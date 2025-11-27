@@ -1,5 +1,5 @@
-﻿using Schedora.Domain.Interfaces;
-using Schedora.Infrastructure.Persistence;
+﻿global using Schedora.Domain.Interfaces;
+global using Schedora.Infrastructure.Persistence;
 
 namespace Schedora.Infrastructure.Repositories;
 

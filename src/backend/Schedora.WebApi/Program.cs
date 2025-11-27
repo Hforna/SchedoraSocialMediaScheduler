@@ -44,6 +44,8 @@ builder.Services.AddAuthentication(opt =>
     cfg.SaveToken = true;
 });
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddSingleton<TokenValidationParameters>(tokenValidationParameters);
 
 builder.Services.Configure<SmtpConfigurations>(builder.Configuration.GetSection("services:smtp"));
@@ -58,9 +60,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
-
 app.UseAuthentication();
+
+app.UseAuthorization();
 
 app.MapControllers();
 

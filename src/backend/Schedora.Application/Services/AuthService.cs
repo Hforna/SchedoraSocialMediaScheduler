@@ -2,32 +2,29 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using Schedora.Application.Requests;
-using Schedora.Application.Responses;
-using Schedora.Application.Utils;
-using Schedora.Domain.Entities;
-using Schedora.Domain.Exceptions;
-using Schedora.Domain.Interfaces;
-using Schedora.Domain.Services;
-using Schedora.Domain.ValueObjects;
 using System.Text;
+using SocialScheduler.Domain.Constants;
 
 namespace Schedora.Application.Services;
 
 public interface IAuthService
 {
-    public Task<UserResponse> RegisterUser(UserRegisterRequest request, string uri);
+    public Task<UserResponse> RegisterUser(UserRegisterRequest request, string emailConfirmatioUri);
     public Task ConfirmEmail(string email, string token);
     public Task<LoginResponse> LoginByApplication(LoginRequest request);
+    public Task<LoginResponse> RefreshToken(string refreshToken);
+    public Task ResetPasswordRequest(string email);
 }
 
 public class AuthService : IAuthService
 {
     public AuthService(ILogger<IAuthService> logger, IMapper mapper, 
         ITokenService tokenService, IUnitOfWork uow, 
-        IPasswordCryptography cryptography, IEmailService emailService, UserManager<User> userManager)
+        IPasswordCryptography cryptography, IEmailService emailService, 
+        UserManager<User> userManager, IActivityLogService activityLogService)
     {
         _logger = logger;
+        _activityLogService = activityLogService;
         _mapper = mapper;
         _tokenService = tokenService;
         _uow = uow;
@@ -43,8 +40,9 @@ public class AuthService : IAuthService
     private readonly IPasswordCryptography _cryptography;
     private readonly IEmailService _emailService;
     private readonly UserManager<User> _userManager;
+    private readonly IActivityLogService _activityLogService;
     
-    public async Task<UserResponse> RegisterUser(UserRegisterRequest request, string uri)
+    public async Task<UserResponse> RegisterUser(UserRegisterRequest request, string emailConfirmatioUri)
     {
         if (!Email.IsValidEmail(request.Email))
             throw new RequestException("E-mail format is not valid");
@@ -66,7 +64,8 @@ public class AuthService : IAuthService
 
         var tokenConfirmation = await _userManager.GenerateEmailConfirmationTokenAsync(user);
         var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(tokenConfirmation));
-        var uriWithToken = $"{uri}?email={user.Email}&token={encodedToken}";
+        var uriWithToken = $"{emailConfirmatioUri}?email={user.Email}&token={encodedToken}";
+        _logger.LogInformation("Uri with token generated {uri}", uriWithToken);
         
         var emailMessage = await _emailService.RenderEmailConfirmation(
             user.UserName!, 
@@ -92,6 +91,13 @@ public class AuthService : IAuthService
         user.IsActive = true;
         user.EmailConfirmed = true;
 
+        var logDetails = new
+        {
+            Email = user.Email,
+            Token = decodedToken
+        };
+        await _activityLogService.LogAsync(user.Id, ActivityActions.EMAIL_VERIFIED, "user", user.Id, logDetails, false);
+
         _uow.GenericRepository.Update<User>(user);
         await _uow.Commit();
     }
@@ -112,6 +118,8 @@ public class AuthService : IAuthService
         _uow.GenericRepository.Update<User>(user);
         await _uow.Commit();
 
+        await _activityLogService.LogAsync(user.Id, ActivityActions.USER_LOGIN, "user", user.Id);
+
         var response = new LoginResponse()
         {
             RefreshToken = refreshToken,
@@ -121,5 +129,42 @@ public class AuthService : IAuthService
         };
 
         return response;
+    }
+
+    public async Task<LoginResponse> RefreshToken(string refreshToken)
+    {
+        var user = await _tokenService.GetUserByToken();
+        var userRefreshToken = user.RefreshToken;
+
+        if (userRefreshToken is null || refreshToken != userRefreshToken)
+            throw new RequestException("Refresh token invalido");
+
+        user.RefreshToken = _tokenService.GenerateRefreshToken();
+        user.RefreshTokenExpires = _tokenService.GenerateRefreshTokenExpiration();
+
+        _uow.GenericRepository.Update<User>(user);
+        await _uow.Commit();
+
+        _logger.LogInformation("New refresh token generated for user: {user.Id}", user.Id);
+
+        var claims = _tokenService.GetTokenClaims();
+
+        var accessToken = _tokenService.GenerateToken(user.Id, user.UserName, claims);
+
+        return new LoginResponse()
+        {
+            AccessToken = accessToken.token,
+            RefreshToken = user.RefreshToken,
+            RefreshExpiresAt = (DateTime)user.RefreshTokenExpires,
+            AccessExpiresAt = accessToken.expiresAt
+        };
+    }
+
+    public async Task ResetPasswordRequest(string email)
+    {
+        var userByEmail = await _uow.UserRepository.UserByEmail(email)
+            ?? throw new NotFoundException("User by e-mail was not found");
+
+
     }
 }
