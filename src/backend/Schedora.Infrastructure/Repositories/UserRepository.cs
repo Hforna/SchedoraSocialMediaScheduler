@@ -20,7 +20,7 @@ public class UserRepository : BaseRepository, IUserRepository
 
     public async Task<User?> UserByEmail(string email)
     {
-        return await _context.Users.SingleOrDefaultAsync(d => d.Email == email);
+        return await _context.Users.SingleOrDefaultAsync(d => d.Email == email && d.EmailConfirmed && d.IsActive);
     }
 
     public async Task<bool> UserByEmailExists(string email)

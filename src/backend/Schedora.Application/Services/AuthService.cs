@@ -18,6 +18,7 @@ public interface IAuthService
 {
     public Task<UserResponse> RegisterUser(UserRegisterRequest request, string uri);
     public Task ConfirmEmail(string email, string token);
+    public Task<LoginResponse> LoginByApplication(LoginRequest request);
 }
 
 public class AuthService : IAuthService
@@ -93,5 +94,32 @@ public class AuthService : IAuthService
 
         _uow.GenericRepository.Update<User>(user);
         await _uow.Commit();
+    }
+
+    public async Task<LoginResponse> LoginByApplication(LoginRequest request)
+    {
+        var user = await _uow.UserRepository.UserByEmail(request.Email)
+            ?? throw new NotFoundException("User was not found");
+
+        (var token, DateTime expiration) = _tokenService.GenerateToken(user.Id, user.UserName!);
+
+        var refreshToken = _tokenService.GenerateRefreshToken();
+        var refreshTokenExpiration = _tokenService.GenerateRefreshTokenExpiration();
+
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpires = refreshTokenExpiration;
+
+        _uow.GenericRepository.Update<User>(user);
+        await _uow.Commit();
+
+        var response = new LoginResponse()
+        {
+            RefreshToken = refreshToken,
+            AccessExpiresAt = expiration,
+            AccessToken = token,
+            RefreshExpiresAt = refreshTokenExpiration,
+        };
+
+        return response;
     }
 }

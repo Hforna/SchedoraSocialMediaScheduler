@@ -39,4 +39,12 @@ public class AuthController : ControllerBase
 
         return Ok();
     }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> LoginByApplication([FromBody]LoginRequest request)
+    {
+        var result = await _authService.LoginByApplication(request);
+
+        return Ok(result);
+    }
 }
