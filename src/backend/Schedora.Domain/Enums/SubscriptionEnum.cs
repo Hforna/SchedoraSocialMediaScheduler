@@ -3,5 +3,5 @@
 public enum SubscriptionEnum
 {
     FREE,
-    PREMIUM
+    PREMIUM,
 }
