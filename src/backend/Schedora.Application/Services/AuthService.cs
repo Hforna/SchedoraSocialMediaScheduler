@@ -13,7 +13,9 @@ public interface IAuthService
     public Task ConfirmEmail(string email, string token);
     public Task<LoginResponse> LoginByApplication(LoginRequest request);
     public Task<LoginResponse> RefreshToken(string refreshToken);
-    public Task ResetPasswordRequest(string email);
+    public Task ResetPasswordRequest(string email, string uri);
+    public Task ResetUserPassword(string email, string token, string password);
+    public Task RevokeToken();
 }
 
 public class AuthService : IAuthService
@@ -160,11 +162,35 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task ResetPasswordRequest(string email)
+    public async Task ResetPasswordRequest(string email, string uri)
     {
-        var userByEmail = await _uow.UserRepository.UserByEmail(email)
+        var user = await _uow.UserRepository.UserByEmail(email)
             ?? throw new NotFoundException("User by e-mail was not found");
 
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 
+        var resetUri = $"{uri}?email={user.Email}&token={encodedToken}";
+        var emailTemplate = await _emailService.RenderResetPassword(user.UserName, CompanyConstraints.CompanyName, resetUri, 24);
+        await _emailService.SendEmail(user.Email, user.UserName, emailTemplate, $"Hi {user.UserName} reset your password here");
+    }
+
+    public async Task ResetUserPassword(string email, string token, string password)
+    {
+        var user = await _uow.UserRepository.UserByEmail(email)
+            ?? throw new NotFoundException("User by e-mail was not found");
+
+        
+    }
+
+    public async Task RevokeToken()
+    {
+        var user = await _tokenService.GetUserByToken();
+
+        user!.RefreshToken = null;
+        user.RefreshTokenExpires = null;
+        
+        _uow.GenericRepository.Update<User>(user);
+        await _uow.Commit();
     }
 }

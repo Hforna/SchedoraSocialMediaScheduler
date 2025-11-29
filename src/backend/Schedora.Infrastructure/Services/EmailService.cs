@@ -45,10 +45,15 @@ public class EmailService : IEmailService
 
     public async Task<string> RenderResetPassword(string userName, string companyName, string resetPasswordUrl, int expirationHours)
     {
-        var model = new ResetPassword()
+        var model = new ResetPasswordEmailModel()
         {
-            
-        }
+            CompanyName = companyName,
+            ResetPasswordUrl = resetPasswordUrl,
+            ExpirationHours = expirationHours,
+            UserName = userName
+        };
+
+        return await _razorEngine.CompileRenderAsync("ResetPasswordRequest.cshtml", model);
     }
 
     public async Task SendEmail(string toEmail, string toUserName, string body, string subject)
