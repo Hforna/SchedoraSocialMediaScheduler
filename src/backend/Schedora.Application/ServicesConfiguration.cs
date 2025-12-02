@@ -16,6 +16,7 @@ public static class ServicesConfiguration
     {
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<ISocialAccountService, SocialAccountService>();
     }
 
     static void AddMapper(IServiceCollection services)

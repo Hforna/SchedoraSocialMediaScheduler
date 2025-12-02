@@ -22,7 +22,7 @@ public class AuthService : IAuthService
 {
     public AuthService(ILogger<IAuthService> logger, IMapper mapper, 
         ITokenService tokenService, IUnitOfWork uow, 
-        IPasswordCryptography cryptography, IEmailService emailService, 
+        ICryptographyService cryptographyService, IEmailService emailService, 
         UserManager<User> userManager, IActivityLogService activityLogService)
     {
         _logger = logger;
@@ -31,7 +31,7 @@ public class AuthService : IAuthService
         _tokenService = tokenService;
         _uow = uow;
         _emailService = emailService;
-        _cryptography = cryptography;
+        _cryptographyService = cryptographyService;
         _userManager = userManager;
     }
 
@@ -39,7 +39,7 @@ public class AuthService : IAuthService
     private readonly IMapper _mapper;
     private readonly ITokenService _tokenService;
     private readonly IUnitOfWork _uow;
-    private readonly IPasswordCryptography _cryptography;
+    private readonly ICryptographyService _cryptographyService;
     private readonly IEmailService _emailService;
     private readonly UserManager<User> _userManager;
     private readonly IActivityLogService _activityLogService;
@@ -55,7 +55,7 @@ public class AuthService : IAuthService
             throw new ConflictException("User with this e-mail already exists");
 
         var user = _mapper.Map<User>(request);
-        user.PasswordHash = _cryptography.HashPassword(request.Password);
+        user.PasswordHash = _cryptographyService.HashPassword(request.Password);
         user.SecurityStamp = Guid.NewGuid().ToString();
 
         var usersNotActive = await _uow.UserRepository.GetUsersNotActiveByEmail(request.Email);

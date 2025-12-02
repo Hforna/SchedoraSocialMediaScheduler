@@ -46,6 +46,8 @@ builder.Services.AddAuthentication(opt =>
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddHttpClient();
+
 builder.Services.AddSingleton<TokenValidationParameters>(tokenValidationParameters);
 
 builder.Services.Configure<SmtpConfigurations>(builder.Configuration.GetSection("services:smtp"));

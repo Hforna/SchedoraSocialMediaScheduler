@@ -46,10 +46,11 @@ public static class ServicesConfiguration
                 configuration.GetValue<string>("services:auth:jwt:signKey")!,
                 configuration.GetValue<int>("services:auth:jwt:expiresAt"));
         });
-        services.AddSingleton<IPasswordCryptography, BCryptCryptography>();
+        services.AddSingleton<ICryptographyService, CryptographyService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IRequestService, RequestService>();
         services.AddScoped<IActivityLogService, ActivityLogService>();
+        services.AddScoped<IExternalAuthenticationService, TwitterExternalAuthenticationService>();
     }
 
     static void AddRepositories(IServiceCollection services)
@@ -57,5 +58,10 @@ public static class ServicesConfiguration
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IGenericRepository, GenericRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+    }
+
+    static void AddExternalServicesAuthentication(IServiceCollection services, IConfiguration configuration)
+    {
+
     }
 }

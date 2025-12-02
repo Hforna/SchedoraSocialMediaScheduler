@@ -12,9 +12,11 @@ public interface IUserService
 
 public class UserService : IUserService
 {
-    public UserService(ITokenService tokenService, IMapper mapper, ILogger<IUserService> logger, IUnitOfWork uow)
+    public UserService(ITokenService tokenService, IMapper mapper, ILogger<IUserService> logger, IUnitOfWork uow,
+        ICryptographyService cryptographyService)
     {
         _tokenService = tokenService;
+        _cryptographyService = cryptographyService;
         _mapper = mapper;
         _logger = logger;
         _uow = uow;
@@ -24,7 +26,7 @@ public class UserService : IUserService
     private readonly IMapper _mapper;
     private readonly ILogger<IUserService> _logger;
     private readonly IUnitOfWork _uow;
-    private readonly IPasswordCryptography _passwordCryptography;
+    private readonly ICryptographyService _cryptographyService;
 
     public async Task<UserResponse> GetUserAuthenticatedInfos()
     {
@@ -37,11 +39,11 @@ public class UserService : IUserService
     {
         var user = await _tokenService.GetUserByToken();
 
-        var isPasswordValid = _passwordCryptography.ValidateHash(request.OldPassword, user.PasswordHash!);
+        var isPasswordValid = _cryptographyService.ValidateHash(request.OldPassword, user.PasswordHash!);
         if (!isPasswordValid)
             throw new UnauthorizedAccessException("Invalid old password");
 
-        var hashPassword = _passwordCryptography.HashPassword(request.NewPassword);
+        var hashPassword = _cryptographyService.HashPassword(request.NewPassword);
 
         user.UpdatePassword(request.NewPassword, hashPassword);
 
