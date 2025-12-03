@@ -4,21 +4,22 @@ using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Schedora.Domain.Dtos;
 using Schedora.Domain.Exceptions;
 using Schedora.Domain.Services;
 
-namespace Schedora.Infrastructure.Services;
+namespace Schedora.Infrastructure.ExternalServices;
 
-public class TwitterExternalAuthenticationService : IExternalAuthenticationService
+public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthenticationService
 {
     public string Platform { get; } = "twitter";
     
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<TwitterExternalAuthenticationService> _logger;
+    private readonly ILogger<TwitterExternalOAuthAuthenticationService> _logger;
     private readonly ICryptographyService _cryptographyService;
     private readonly string _clientId;
     
-    public TwitterExternalAuthenticationService(IServiceProvider serviceProvider, ILogger<TwitterExternalAuthenticationService> logger, 
+    public TwitterExternalOAuthAuthenticationService(IServiceProvider serviceProvider, ILogger<TwitterExternalOAuthAuthenticationService> logger, 
         IConfiguration configuration, ICryptographyService cryptographyService)
     {
 
@@ -60,6 +61,11 @@ public class TwitterExternalAuthenticationService : IExternalAuthenticationServi
             
             throw;
         }
+    }
+
+    public Task<ExternalServicesTokensDto> RequestAccessFromOAuthPlatform(string code, string redirectUrl)
+    {
+        throw new NotImplementedException();
     }
 
     private string GenerateCodeChallenge()

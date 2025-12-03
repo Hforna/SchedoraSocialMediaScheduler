@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Schedora.Domain.Entities;
 using Schedora.Domain.Interfaces;
 using Schedora.Domain.Services;
+using Schedora.Infrastructure.ExternalServices;
 using Schedora.Infrastructure.Persistence;
 using Schedora.Infrastructure.Repositories;
 using Schedora.Infrastructure.Services;
@@ -50,7 +51,8 @@ public static class ServicesConfiguration
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IRequestService, RequestService>();
         services.AddScoped<IActivityLogService, ActivityLogService>();
-        services.AddScoped<IExternalAuthenticationService, TwitterExternalAuthenticationService>();
+        services.AddScoped<IExternalOAuthAuthenticationService, TwitterExternalOAuthAuthenticationService>();
+        services.AddScoped<IExternalOAuthAuthenticationService, LinkedInOAuthAuthenticationService>();
     }
 
     static void AddRepositories(IServiceCollection services)

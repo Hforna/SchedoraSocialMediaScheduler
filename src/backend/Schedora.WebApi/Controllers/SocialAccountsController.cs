@@ -22,7 +22,7 @@ public class SocialAccountsController : ControllerBase
     [HttpGet("connect/{platform}")]
     [Authorize]
     public async Task<IActionResult> ConnectPlatform([FromRoute]string platform, [FromQuery]string redirectUrl, 
-        [FromServices]IEnumerable<IExternalAuthenticationService> externalAuthenticationService)
+        [FromServices]IEnumerable<IExternalOAuthAuthenticationService> externalAuthenticationService)
     {
         var service = externalAuthenticationService.
             FirstOrDefault(d => d.Platform.Equals(platform, StringComparison.InvariantCultureIgnoreCase));
@@ -33,6 +33,18 @@ public class SocialAccountsController : ControllerBase
         var result = await service.GetOAuthRedirectUrl(redirectUrl);
 
         return Ok(result);
+    }
+
+    [HttpGet("linkedin/callback")]
+    public async Task<IActionResult> LinkedInCallback([FromQuery]string state, [FromQuery]string code,
+        [FromServices]IEnumerable<IExternalOAuthAuthenticationService> externalAuthenticationService)
+    {
+        var externalService = externalAuthenticationService
+            .FirstOrDefault(d => d.Platform.Equals("linkedin", StringComparison.InvariantCultureIgnoreCase));
+        
+        var tokensResult = await externalService!.RequestAccessFromOAuthPlatform(code, state);
+        //TODO: validate state storaged on session
+        
     }
 
     [HttpGet("twitter/callback")]
