@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Schedora.Domain.Dtos;
+using Schedora.Domain.Entities;
 using Schedora.Domain.Exceptions;
 using Schedora.Domain.Services;
 
@@ -12,7 +13,7 @@ namespace Schedora.Infrastructure.ExternalServices;
 
 public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthenticationService
 {
-    public string Platform { get; } = "twitter";
+    public string Platform { get; } = SocialPlatformsNames.Twitter;
     
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<TwitterExternalOAuthAuthenticationService> _logger;

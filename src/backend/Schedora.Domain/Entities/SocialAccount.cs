@@ -19,3 +19,9 @@ public class SocialAccount : Entity
     public DateTime LastSyncAt { get; set; }
     public DateTime ConnectedAt { get; set; }
 }
+
+public class SocialPlatformsNames
+{
+    public const string Twitter = "Twitter";
+    public const string LinkedIn = "LinkedIn";
+}

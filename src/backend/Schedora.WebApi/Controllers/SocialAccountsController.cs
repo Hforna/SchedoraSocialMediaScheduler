@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Schedora.Application.Services;
+using Schedora.Domain.Entities;
 using Schedora.Domain.Exceptions;
 using Schedora.Domain.Services;
+using Schedora.WebApi.Extensions;
 
 namespace Schedora.WebApi.Controllers;
 
@@ -13,10 +15,15 @@ namespace Schedora.WebApi.Controllers;
 public class SocialAccountsController : ControllerBase
 {
     private readonly ISocialAccountService _socialAccountService;
+    private readonly ILogger<SocialAccountsController> _logger;
+    private readonly LinkGenerator _linkGenerator;
     
-    public SocialAccountsController(ISocialAccountService socialAccountService)
+    public SocialAccountsController(ISocialAccountService socialAccountService, LinkGenerator linkGenerator, 
+        ILogger<SocialAccountsController> logger)
     {
         _socialAccountService = socialAccountService;
+        _logger = logger;
+        _linkGenerator = linkGenerator;
     }
 
     [HttpGet("connect/{platform}")]
@@ -36,13 +43,19 @@ public class SocialAccountsController : ControllerBase
     }
 
     [HttpGet("linkedin/callback")]
+    [EndpointName("LinkedInCallback")]
     public async Task<IActionResult> LinkedInCallback([FromQuery]string state, [FromQuery]string code,
         [FromServices]IEnumerable<IExternalOAuthAuthenticationService> externalAuthenticationService)
     {
         var externalService = externalAuthenticationService
-            .FirstOrDefault(d => d.Platform.Equals("linkedin", StringComparison.InvariantCultureIgnoreCase));
+            .FirstOrDefault(d => d.Platform.Equals(SocialPlatformsNames.LinkedIn,
+                StringComparison.InvariantCultureIgnoreCase));
+
+        var baseUri = HttpContext.GetBaseUri();
+        baseUri = baseUri.EndsWith('/') ? baseUri : $"{baseUri}/";
+        var redirectUri = $"{HttpContext.GetBaseUri()}{_linkGenerator.GetPathByName(HttpContext, "LinkedInCallback")}";
         
-        var tokensResult = await externalService!.RequestAccessFromOAuthPlatform(code, state);
+        var tokensResult = await externalService!.RequestAccessFromOAuthPlatform(code, redirectUri);
         //TODO: validate state storaged on session
         
     }
