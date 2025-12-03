@@ -67,7 +67,7 @@ public class DataContext : IdentityDbContext<User, Role, long>
 
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), @"..\Schedora.WebApi\appsettings.Development.json"), optional: false, reloadOnChange: true)
+                .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), @"../Schedora.WebApi/appsettings.Development.json"), optional: false, reloadOnChange: true)
                 .Build();
 
             optionsBuilder.UseSqlServer(configuration.GetConnectionString("sqlserver"));

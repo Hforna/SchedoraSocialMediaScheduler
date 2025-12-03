@@ -81,7 +81,7 @@ public class AuthService : IAuthService
 
     public async Task ConfirmEmail(string email, string token)
     {
-        var user = await _uow.UserRepository.UserByEmail(email)
+        var user = await _uow.UserRepository.UserByEmailNotConfirmed(email)
             ?? throw new RequestException("User with this e-mail has not been found");
 
         var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));

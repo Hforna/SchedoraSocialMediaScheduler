@@ -10,7 +10,6 @@ namespace Schedora.WebApi.Controllers;
 
 [Route("api/social-accounts")]
 [ApiController]
-[Authorize]
 public class SocialAccountsController : ControllerBase
 {
     private readonly ISocialAccountService _socialAccountService;
@@ -20,7 +19,8 @@ public class SocialAccountsController : ControllerBase
         _socialAccountService = socialAccountService;
     }
 
-    [HttpPost("connect/{platform}")]
+    [HttpGet("connect/{platform}")]
+    [Authorize]
     public async Task<IActionResult> ConnectPlatform([FromRoute]string platform, [FromQuery]string redirectUrl, 
         [FromServices]IEnumerable<IExternalAuthenticationService> externalAuthenticationService)
     {
@@ -32,6 +32,12 @@ public class SocialAccountsController : ControllerBase
         
         var result = await service.GetOAuthRedirectUrl(redirectUrl);
 
-        return Challenge(new AuthenticationProperties() { RedirectUri = result });
+        return Ok(result);
+    }
+
+    [HttpGet("twitter/callback")]
+    public async Task<IActionResult> TwitterCallback()
+    {
+        return Ok();
     }
 }

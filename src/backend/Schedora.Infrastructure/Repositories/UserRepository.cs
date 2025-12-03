@@ -11,6 +11,12 @@ public class UserRepository : BaseRepository, IUserRepository
     {
     }
 
+    public async Task<User?> UserByEmailNotConfirmed(string email)
+    {
+        return await _context.Users
+            .SingleOrDefaultAsync(d => d.Email == email && !d.EmailConfirmed); 
+    }
+
     public async Task<List<User>> GetUsersNotActiveByEmail(string email)
     {
         return await _context.Users

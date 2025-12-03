@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
@@ -10,10 +11,12 @@ namespace Schedora.Infrastructure.Services;
 
 public class TwitterExternalAuthenticationService : IExternalAuthenticationService
 {
+    public string Platform { get; } = "twitter";
+    
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<TwitterExternalAuthenticationService> _logger;
     private readonly ICryptographyService _cryptographyService;
-    private readonly string _secretKey;
+    private readonly string _clientId;
     
     public TwitterExternalAuthenticationService(IServiceProvider serviceProvider, ILogger<TwitterExternalAuthenticationService> logger, 
         IConfiguration configuration, ICryptographyService cryptographyService)
@@ -23,43 +26,33 @@ public class TwitterExternalAuthenticationService : IExternalAuthenticationServi
         _logger = logger;
         _cryptographyService = cryptographyService;
         
-        string consumerKey = configuration.GetValue<string>("Twitter:ConsumerKey");
+        string clientId = configuration.GetValue<string>("Twitter:ClientId");
         string consumerSecret = configuration.GetValue<string>("Twitter:ConsumerSecret");
 
-        var concatenateKeys = $"{consumerKey}:{consumerSecret}";
-        _secretKey = ReplaceSymbolsFromBase64(Convert.ToBase64String(Encoding.UTF8.GetBytes(concatenateKeys)));
+        _clientId = clientId;
     }
-
-
-    public string Platform { get; } = "twitter";
+    
 
     public async Task<string> GetOAuthRedirectUrl(string uri)
     {
-        using var scope = _serviceProvider.CreateScope();
-        using var client = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
-
-        var state = GenerateRandomString();
-        var codeChallenge = _cryptographyService.CryptographyPasswordAs256Hash(GenerateRandomString());
-        
-        var result = await client.GetAsync($"https://x.com/i/oauth2/authorize?" +
-                                           $"response_type=code&client_id={_secretKey}&" +
-                                           $"redirect_uri={uri}&" +
-                                           $"scope=tweet.read%20users.read%20account.follows.read%20account.follows.write&" +
-                                           $"state={state}&" +
-                                           $"code_challenge={codeChallenge}&" +
-                                           $"code_challenge_method=S256");
-
         try
         {
-            result.EnsureSuccessStatusCode();
+            using var scope = _serviceProvider.CreateScope();
+            using var client = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
+
+            var state = GenerateRandomString(32);
+            var codeChallenge = GenerateCodeChallenge();
+
+            var scopes = "tweet.read users.read account.follows.read account.follows.write";
             
-            var content = await result.Content.ReadAsStringAsync();
-            var url = JsonSerializer.Deserialize<string>(content);
-            
-            if(string.IsNullOrEmpty(url))
-                throw new ExternalServiceException("challenge url not provided on content");
-            
-            return url;
+            return $"https://x.com/i/oauth2/authorize?" +
+                                               $"response_type=code&client_id={_clientId}&" +
+                                               $"redirect_uri={Uri.EscapeDataString(uri)}&" +
+                                               $"scope={Uri.EscapeDataString(scopes)}&" +
+                                               $"state={state}&" +
+                                               $"code_challenge={codeChallenge}&" +
+                                               $"code_challenge_method=S256";
+
         }
         catch (Exception ex)
         {
@@ -69,28 +62,38 @@ public class TwitterExternalAuthenticationService : IExternalAuthenticationServi
         }
     }
 
-    private string ReplaceSymbolsFromBase64(string base64)
+    private string GenerateCodeChallenge()
     {
-        var sb = new StringBuilder();
-        sb.Append(base64);
-        sb.Replace('+', '-');
-        sb.Replace('/', '_');
-        sb.Replace('=', '-');
+        var randomString = GenerateRandomString(128);
+        var stringAs256 = _cryptographyService.CryptographyPasswordAs256Hash(randomString);
         
-        return sb.ToString();
+        return Base64UrlEncode(stringAs256);
     }
 
-    private static string GenerateRandomString()
+    private string Base64UrlEncode(byte[] data)
     {
-        var acceptedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var base64 = Convert.ToBase64String(data);
         
-        Random random = new Random();
-        StringBuilder sb = new StringBuilder(255);
+        return base64
+            .Replace('+', '-')
+            .Replace('/', '_')
+            .TrimEnd('=');
+    }
 
-        for (int i = 0; i < 255; i++)
+    private static string GenerateRandomString(int length)
+    {
+        const string acceptedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+        
+        var random = new byte[length];
+        using (var rng = RandomNumberGenerator.Create())
         {
-            int index = random.Next(0, acceptedChars.Length);
-            sb.Append(acceptedChars[index]);
+            rng.GetBytes(random);
+        }
+        
+        var sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++)
+        {
+            sb.Append(acceptedChars[random[i] % acceptedChars.Length]);
         }
 
         return sb.ToString();
