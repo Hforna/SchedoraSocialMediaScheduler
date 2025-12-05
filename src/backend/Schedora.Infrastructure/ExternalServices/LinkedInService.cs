@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.WebUtilities;
@@ -15,12 +16,60 @@ namespace Schedora.Infrastructure.ExternalServices;
 
 public class LinkedInService : ILinkedInService
 {
+    public LinkedInService(IServiceProvider serviceProvider, ILogger<LinkedInOAuthAuthenticationService> logger)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+    }
+
+    private const string BaseLinkedInUrl = "https://api.linkedin.com/v2/";
+    
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<LinkedInOAuthAuthenticationService> _logger;
     
-    public Task<SocialAccountInfosDto> GetSocialAccountInfos(string accessToken)
+    
+    public async Task<SocialAccountInfosDto> GetSocialAccountInfos(string accessToken, string tokenType)
     {
-        throw new NotImplementedException();
+        using var scope = _serviceProvider.CreateScope();
+        var httpClient = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
+
+        try
+        {
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(tokenType, accessToken);
+
+            var request = await httpClient.GetAsync($"{BaseLinkedInUrl}userinfo");
+            
+            request.EnsureSuccessStatusCode();
+
+            var content = await request.Content.ReadAsStringAsync();
+
+            var deserialize = JsonSerializer.Deserialize<LinkedInUserInfosDto>(content);
+            
+            if (deserialize is null)
+                throw new ExternalServiceException("Failed to parse response");
+
+            var response = new SocialAccountInfosDto()
+            {
+                Email = deserialize.Email,
+                FirstName = deserialize.GivenName,
+                LastName = deserialize.FamilyName,
+                ProfileImageUrl = deserialize.ProfilePicture,
+                UserId = deserialize.Id,
+                UserName = deserialize.UserName
+            };
+            
+            return response;
+        }
+        catch (HttpRequestException he)
+        {
+            _logger.LogError(he, he.Message);
+            throw;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "An unexpected error has occurred");
+            throw;
+        }
     }
 }
 
@@ -30,8 +79,8 @@ public class LinkedInOAuthAuthenticationService : IExternalOAuthAuthenticationSe
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
-        _clientId = configuration.GetValue<string>("LinkedIn:ClientId")!;
-        _clientSecret = configuration.GetValue<string>("LinkedIn:ClientSecret")!;
+        _clientId = configuration.GetValue<string>("LinkedIn:clientId")!;
+        _clientSecret = configuration.GetValue<string>("LinkedIn:clientSecret")!;
     }
 
     private readonly IServiceProvider  _serviceProvider;
@@ -73,20 +122,17 @@ public class LinkedInOAuthAuthenticationService : IExternalOAuthAuthenticationSe
 
         try
         {
-            httpClient.DefaultRequestHeaders.Add("Content-Type", "x-www-form-urlencoded");
-
             var queryParams = new Dictionary<string, string>()
             {
                 { "grant_type", "authorization_code" },
                 { "code", code },
-                { "redirect_uri", redirectUrl },
                 { "client_id", _clientId },
                 { "client_secret", _clientSecret },
+                { "redirect_uri", redirectUrl },
             };
 
-            var url = QueryHelpers.AddQueryString("https://www.linkedin.com/in/oauth/v2/authorization", queryParams!);
-            var request = await httpClient.PostAsync(url, null);
-
+            var @params = new FormUrlEncodedContent(queryParams);
+            var request = await httpClient.PostAsync("https://www.linkedin.com/oauth/v2/accessToken", @params);
             request.EnsureSuccessStatusCode();
 
             var content = await request.Content.ReadAsStringAsync();

@@ -4,5 +4,5 @@ namespace Schedora.Domain.Services;
 
 public interface ILinkedInService
 {
-    public Task<SocialAccountInfosDto> GetSocialAccountInfos(string accessToken);
+    public Task<SocialAccountInfosDto> GetSocialAccountInfos(string accessToken, string tokenType);
 }

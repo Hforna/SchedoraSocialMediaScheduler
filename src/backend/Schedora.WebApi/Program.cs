@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Schedora.Application;
 using Schedora.Infrastructure;
+using Schedora.Infrastructure.RabbitMq;
 using Schedora.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -74,6 +75,8 @@ builder.Services.AddAuthentication(opt =>
     cfg.TokenValidationParameters = tokenValidationParameters;
     cfg.SaveToken = true;
 });
+
+builder.Services.Configure<RabbitMqConnection>(builder.Configuration.GetSection("RabbitMq"));
 
 builder.Services.AddMemoryCache();
 

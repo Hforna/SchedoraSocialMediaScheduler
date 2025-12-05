@@ -13,5 +13,7 @@ public class ExternalServicesTokensDto()
     [JsonPropertyName("refresh_token_expires_in")]
     public int RefreshTokenExpiresIn { get; set; }
     [JsonPropertyName("scope")]
-    public string Scope { get; set; }
+    public string Scopes { get; set; }
+    [JsonPropertyName("token_type")]
+    public string TokenType { get; set; }
 }

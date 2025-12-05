@@ -52,12 +52,15 @@ public class SocialAccountsController : ControllerBase
                 StringComparison.InvariantCultureIgnoreCase));
 
         var baseUri = HttpContext.GetBaseUri();
-        baseUri = baseUri.EndsWith('/') ? baseUri : $"{baseUri}/";
-        var redirectUri = $"{HttpContext.GetBaseUri()}{_linkGenerator.GetPathByName(HttpContext, "LinkedInCallback")}";
+        var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, "LinkedInCallback");
+        var redirectUri = $"{HttpContext.GetBaseUri()}{callbackEndpoint![1..]}";
         
         var tokensResult = await externalService!.RequestAccessFromOAuthPlatform(code, redirectUri);
         //TODO: validate state storaged on session
         
+        await _socialAccountService.ConfigureOAuthTokensFromLinkedin(tokensResult);
+
+        return Ok();
     }
 
     [HttpGet("twitter/callback")]

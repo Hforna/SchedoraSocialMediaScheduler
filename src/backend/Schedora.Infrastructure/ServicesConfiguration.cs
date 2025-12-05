@@ -6,9 +6,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Schedora.Domain.Entities;
 using Schedora.Domain.Interfaces;
+using Schedora.Domain.RabbitMq.Producers;
 using Schedora.Domain.Services;
 using Schedora.Infrastructure.ExternalServices;
 using Schedora.Infrastructure.Persistence;
+using Schedora.Infrastructure.RabbitMq;
+using Schedora.Infrastructure.RabbitMq.Producers;
 using Schedora.Infrastructure.Repositories;
 using Schedora.Infrastructure.Services;
 
@@ -21,6 +24,8 @@ public static class ServicesConfiguration
         AddDbContext(services, configuration);
         AddServices(services, configuration);
         AddRepositories(services);
+        AddProducers(services, configuration);
+        AddConsumers(services);
     }
 
     static void AddDbContext(IServiceCollection services, IConfiguration configuration)
@@ -53,6 +58,17 @@ public static class ServicesConfiguration
         services.AddScoped<IActivityLogService, ActivityLogService>();
         services.AddScoped<IExternalOAuthAuthenticationService, TwitterExternalOAuthAuthenticationService>();
         services.AddScoped<IExternalOAuthAuthenticationService, LinkedInOAuthAuthenticationService>();
+        services.AddScoped<ILinkedInService, LinkedInService>();
+    }
+
+    static void AddProducers(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton<ISocialAccountProducer, SocialAccountProducer>();
+    }
+
+    static void AddConsumers(IServiceCollection services)
+    {
+        
     }
 
     static void AddRepositories(IServiceCollection services)
@@ -60,10 +76,5 @@ public static class ServicesConfiguration
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IGenericRepository, GenericRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
-    }
-
-    static void AddExternalServicesAuthentication(IServiceCollection services, IConfiguration configuration)
-    {
-
     }
 }

@@ -29,9 +29,6 @@ namespace Schedora.Infrastructure.Persistence
             builder.Property(sa => sa.UserName)
                 .HasMaxLength(255);
 
-            builder.Property(sa => sa.DisplayName)
-                .HasMaxLength(255);
-
             builder.Property(sa => sa.ProfileImageUrl)
                 .HasMaxLength(500);
 

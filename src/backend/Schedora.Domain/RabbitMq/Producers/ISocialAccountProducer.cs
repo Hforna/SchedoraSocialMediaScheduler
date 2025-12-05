@@ -1,6 +1,8 @@
+using Schedora.Domain.Dtos;
+
 namespace Schedora.Domain.RabbitMq.Producers;
 
-public interface IRabbitMqConnection
+public interface ISocialAccountProducer
 {
-    
+    public Task SendAccountConnected(SocialAccountConnectedDto dto);
 }
