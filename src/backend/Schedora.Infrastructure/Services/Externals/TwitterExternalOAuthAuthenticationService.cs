@@ -8,6 +8,7 @@ using Schedora.Domain.Dtos;
 using Schedora.Domain.Entities;
 using Schedora.Domain.Exceptions;
 using Schedora.Domain.Services;
+using Schedora.Infrastructure.Utils;
 
 namespace Schedora.Infrastructure.ExternalServices;
 
@@ -42,7 +43,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
             using var scope = _serviceProvider.CreateScope();
             using var client = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
 
-            var state = GenerateRandomString(32);
+            var state = GenerateStrings.GenerateRandomString(32);
             var codeChallenge = GenerateCodeChallenge();
 
             var scopes = "tweet.read users.read account.follows.read account.follows.write";
@@ -71,7 +72,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
 
     private string GenerateCodeChallenge()
     {
-        var randomString = GenerateRandomString(128);
+        var randomString = GenerateStrings.GenerateRandomString(128);
         var stringAs256 = _cryptographyService.CryptographyPasswordAs256Hash(randomString);
         
         return Base64UrlEncode(stringAs256);
@@ -85,24 +86,5 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
             .Replace('+', '-')
             .Replace('/', '_')
             .TrimEnd('=');
-    }
-
-    private static string GenerateRandomString(int length)
-    {
-        const string acceptedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
-        
-        var random = new byte[length];
-        using (var rng = RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(random);
-        }
-        
-        var sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++)
-        {
-            sb.Append(acceptedChars[random[i] % acceptedChars.Length]);
-        }
-
-        return sb.ToString();
     }
 }

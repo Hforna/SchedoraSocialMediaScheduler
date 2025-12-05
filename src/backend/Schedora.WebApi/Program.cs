@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Schedora.Application;
 using Schedora.Infrastructure;
+using Schedora.Infrastructure.Externals.Services;
 using Schedora.Infrastructure.RabbitMq;
 using Schedora.Infrastructure.Services;
 

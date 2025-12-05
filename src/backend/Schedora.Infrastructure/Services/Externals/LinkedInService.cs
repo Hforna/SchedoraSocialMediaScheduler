@@ -11,6 +11,8 @@ using Schedora.Domain.Dtos;
 using Schedora.Domain.Entities;
 using Schedora.Domain.Exceptions;
 using Schedora.Domain.Services;
+using Schedora.Domain.Services.Cache;
+using Schedora.Infrastructure.Utils;
 
 namespace Schedora.Infrastructure.ExternalServices;
 
@@ -95,15 +97,23 @@ public class LinkedInOAuthAuthenticationService : IExternalOAuthAuthenticationSe
     {
         using var scope = _serviceProvider.CreateScope();
         var httpClient = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>();
-
+        var cacheService = scope.ServiceProvider.GetRequiredService<ISocialAccountCache>();
+        var tokenService =  scope.ServiceProvider.GetRequiredService<ITokenService>();
+        
         try
         {
+            var user = await tokenService.GetUserByToken();
+            
+            var state = GenerateStrings.GenerateRandomString(32);
+
+            await cacheService.AddStateAuthorization(state, user.Id, SocialPlatformsNames.LinkedIn);
+            
             var authorizeUrl =
                 "https://www.linkedin.com/oauth/v2/authorization" +
                 $"?response_type=code" +
                 $"&client_id={_clientId}" +
                 $"&redirect_uri={redirectUrl}" +
-                "&state=foobar" +
+                $"&state={state}" +
                 "&scope=openid%20profile%20email%20w_member_social";
 
             return authorizeUrl;

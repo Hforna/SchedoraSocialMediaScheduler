@@ -16,6 +16,14 @@ services:
     depends_on:
       - sqlserver
       - rabbitMq
+      - redis
+  
+  redis:
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2019-latest
@@ -38,3 +46,4 @@ networks:
 
 volumes:
   sqlserver_data:
+  redis_data:

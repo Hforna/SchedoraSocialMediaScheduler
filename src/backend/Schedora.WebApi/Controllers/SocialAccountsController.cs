@@ -56,9 +56,8 @@ public class SocialAccountsController : ControllerBase
         var redirectUri = $"{HttpContext.GetBaseUri()}{callbackEndpoint![1..]}";
         
         var tokensResult = await externalService!.RequestAccessFromOAuthPlatform(code, redirectUri);
-        //TODO: validate state storaged on session
         
-        await _socialAccountService.ConfigureOAuthTokensFromLinkedin(tokensResult);
+        await _socialAccountService.ConfigureOAuthTokensFromLinkedin(tokensResult, state);
 
         return Ok();
     }

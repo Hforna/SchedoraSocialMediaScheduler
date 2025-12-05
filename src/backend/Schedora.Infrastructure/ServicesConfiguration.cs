@@ -8,12 +8,16 @@ using Schedora.Domain.Entities;
 using Schedora.Domain.Interfaces;
 using Schedora.Domain.RabbitMq.Producers;
 using Schedora.Domain.Services;
+using Schedora.Domain.Services.Cache;
+using Schedora.Infrastructure.Externals.Services;
 using Schedora.Infrastructure.ExternalServices;
 using Schedora.Infrastructure.Persistence;
 using Schedora.Infrastructure.RabbitMq;
 using Schedora.Infrastructure.RabbitMq.Producers;
 using Schedora.Infrastructure.Repositories;
 using Schedora.Infrastructure.Services;
+using Schedora.Infrastructure.Services.Cache;
+using StackExchange.Redis;
 
 namespace Schedora.Infrastructure;
 
@@ -26,13 +30,14 @@ public static class ServicesConfiguration
         AddRepositories(services);
         AddProducers(services, configuration);
         AddConsumers(services);
+        AddRedis(services, configuration);
     }
 
     static void AddDbContext(IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<DataContext>(d => d.UseSqlServer(configuration.GetConnectionString("sqlserver")));
         
-        services.AddIdentity<User, Role>()
+        services.AddIdentity<User, Schedora.Domain.Entities.Role>()
             .AddEntityFrameworkStores<DataContext>()
             .AddDefaultTokenProviders()
             .AddUserManager<UserManager<User>>();
@@ -59,6 +64,16 @@ public static class ServicesConfiguration
         services.AddScoped<IExternalOAuthAuthenticationService, TwitterExternalOAuthAuthenticationService>();
         services.AddScoped<IExternalOAuthAuthenticationService, LinkedInOAuthAuthenticationService>();
         services.AddScoped<ILinkedInService, LinkedInService>();
+    }
+    
+    static void AddRedis(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = configuration.GetConnectionString("redis");
+        });
+
+        services.AddScoped<ISocialAccountCache, SocialAccountCache>();
     }
 
     static void AddProducers(IServiceCollection services, IConfiguration configuration)

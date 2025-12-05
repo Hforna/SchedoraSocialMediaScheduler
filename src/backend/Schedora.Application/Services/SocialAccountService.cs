@@ -1,20 +1,22 @@
 using Schedora.Domain.Dtos;
 using Schedora.Domain.RabbitMq.Producers;
+using Schedora.Domain.Services.Cache;
 
 namespace Schedora.Application.Services;
 
 public interface ISocialAccountService
 {
-    public Task ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto);
+    public Task ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state);
 }
 
 public class SocialAccountService : ISocialAccountService
 {
     public SocialAccountService(ILogger<ISocialAccountService> logger, ITokenService tokenService, 
         IMapper mapper, IUnitOfWork uow, 
-        ILinkedInService linkedInService, ISocialAccountProducer socialAccountProducer)
+        ILinkedInService linkedInService, ISocialAccountProducer socialAccountProducer, ISocialAccountCache accountCache)
     {
         _logger = logger;
+        _accountCache = accountCache;
         _tokenService = tokenService;
         _mapper = mapper;
         _uow = uow;
@@ -28,13 +30,20 @@ public class SocialAccountService : ISocialAccountService
     private readonly IUnitOfWork _uow;
     private readonly ILinkedInService  _linkedInService;
     private readonly ISocialAccountProducer _socialAccountProducer;
+    private readonly ISocialAccountCache _accountCache;
     
-    public async Task ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto)
+    public async Task ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state)
     {
         var socialUserInfos = await _linkedInService.GetSocialAccountInfos(dto.AccessToken, "Bearer");
         
         var user = await _uow.UserRepository.UserByEmail(socialUserInfos.Email) 
                    ?? throw new NotFoundException("The email provided by external service was not found in application");
+        
+        var cacheState = await _accountCache.GetStateAuthorization(user.Id, SocialPlatformsNames.LinkedIn);
+
+        if (string.IsNullOrEmpty(cacheState) || cacheState != state)
+            throw new UnauthorizedException("Invalid state from query");
+
         
         var socialAccount = new SocialAccount()
         {

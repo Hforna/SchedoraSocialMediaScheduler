@@ -5,7 +5,7 @@
  using Schedora.Domain.Services;
  using Schedora.Infrastructure.EmailTemplates.Models;
 
-namespace Schedora.Infrastructure.Services;
+namespace Schedora.Infrastructure.Externals.Services;
 
 public class EmailService : IEmailService
 {
