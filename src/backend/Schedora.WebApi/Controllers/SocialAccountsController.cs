@@ -62,9 +62,5 @@ public class SocialAccountsController : ControllerBase
         return Ok();
     }
 
-    [HttpGet("twitter/callback")]
-    public async Task<IActionResult> TwitterCallback()
-    {
-        return Ok();
-    }
+
 }

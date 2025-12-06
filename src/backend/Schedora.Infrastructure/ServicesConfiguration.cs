@@ -17,6 +17,7 @@ using Schedora.Infrastructure.RabbitMq.Producers;
 using Schedora.Infrastructure.Repositories;
 using Schedora.Infrastructure.Services;
 using Schedora.Infrastructure.Services.Cache;
+using Schedora.Infrastructure.Services.ExternalServicesConfigs;
 using StackExchange.Redis;
 
 namespace Schedora.Infrastructure;
@@ -64,6 +65,10 @@ public static class ServicesConfiguration
         services.AddScoped<IExternalOAuthAuthenticationService, TwitterExternalOAuthAuthenticationService>();
         services.AddScoped<IExternalOAuthAuthenticationService, LinkedInOAuthAuthenticationService>();
         services.AddScoped<ILinkedInService, LinkedInService>();
+        services.AddScoped<IPkceService, PkceService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddSingleton<ITwitterOAuthConfiguration, TwitterOAuthConfiguration>();
+        services.AddScoped<IOAuthStateService,  OAuthStateService>();
     }
     
     static void AddRedis(IServiceCollection services, IConfiguration configuration)

@@ -8,6 +8,8 @@ using Schedora.Domain.Dtos;
 using Schedora.Domain.Entities;
 using Schedora.Domain.Exceptions;
 using Schedora.Domain.Services;
+using Schedora.Domain.Services.Cache;
+using Schedora.Infrastructure.Services.ExternalServicesConfigs;
 using Schedora.Infrastructure.Utils;
 
 namespace Schedora.Infrastructure.ExternalServices;
@@ -18,16 +20,23 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
     
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<TwitterExternalOAuthAuthenticationService> _logger;
-    private readonly ICryptographyService _cryptographyService;
+    private readonly IPkceService  _pkceService;
+    private readonly ICurrentUserService  _currentUserService;
+    private readonly ITwitterOAuthConfiguration _oauthConfig;
+    private readonly IOAuthStateService _oauthStateService;
     private readonly string _clientId;
     
     public TwitterExternalOAuthAuthenticationService(IServiceProvider serviceProvider, ILogger<TwitterExternalOAuthAuthenticationService> logger, 
-        IConfiguration configuration, ICryptographyService cryptographyService)
+        IConfiguration configuration, IPkceService pkceService, 
+        ICurrentUserService currentUserService, ITwitterOAuthConfiguration oauthConfig, IOAuthStateService oauthStateService)
     {
 
         _serviceProvider = serviceProvider;
+        _oauthStateService  = oauthStateService;
         _logger = logger;
-        _cryptographyService = cryptographyService;
+        _currentUserService = currentUserService;
+        _pkceService = pkceService;
+        _oauthConfig = oauthConfig;
         
         string clientId = configuration.GetValue<string>("Twitter:ClientId");
         string consumerSecret = configuration.GetValue<string>("Twitter:ConsumerSecret");
@@ -42,14 +51,21 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
         {
             using var scope = _serviceProvider.CreateScope();
             using var client = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
+            var cacheService = scope.ServiceProvider.GetRequiredService<ISocialAccountCache>();
 
-            var state = GenerateStrings.GenerateRandomString(32);
-            var codeChallenge = GenerateCodeChallenge();
-
-            var scopes = "tweet.read users.read account.follows.read account.follows.write";
+            var user = await _currentUserService.GetCurrentUser();
             
-            return $"https://x.com/i/oauth2/authorize?" +
-                                               $"response_type=code&client_id={_clientId}&" +
+            var state = GenerateStrings.GenerateRandomString(32);
+
+            await _oauthStateService.StorageState(state, user!.Id, SocialPlatformsNames.Twitter);
+            
+            var codeChallenge = _pkceService.GenerateCodeChallenge();
+
+            var scopes = _oauthConfig.GetScopesAvailable();
+            
+            return $"{_oauthConfig.GetTwitterOAuthUri()}authorize?" +
+                                               $"response_type=code" +
+                                               $"&client_id={_clientId}&" +
                                                $"redirect_uri={Uri.EscapeDataString(uri)}&" +
                                                $"scope={Uri.EscapeDataString(scopes)}&" +
                                                $"state={state}&" +
@@ -69,8 +85,19 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
     {
         throw new NotImplementedException();
     }
+    
+}
 
-    private string GenerateCodeChallenge()
+public interface IPkceService
+{
+    public string GenerateCodeChallenge();
+}
+
+public class PkceService : IPkceService
+{
+    private readonly ICryptographyService _cryptographyService;
+
+    public string GenerateCodeChallenge()
     {
         var randomString = GenerateStrings.GenerateRandomString(128);
         var stringAs256 = _cryptographyService.CryptographyPasswordAs256Hash(randomString);

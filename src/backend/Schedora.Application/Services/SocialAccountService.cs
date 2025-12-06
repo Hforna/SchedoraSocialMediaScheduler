@@ -62,9 +62,7 @@ public class SocialAccountService : ISocialAccountService
             ProfileImageUrl = socialUserInfos.ProfileImageUrl,
             FollowerCount = socialUserInfos.FollowerCount,
         };
-        if (dto.RefreshTokenExpiresIn != 0)
-            socialAccount.LastTokenRefreshAt = DateTime.UtcNow.AddMinutes(dto.RefreshTokenExpiresIn);
-        
+
         await _uow.GenericRepository.Add<SocialAccount>(socialAccount);
         await _uow.Commit();
 
