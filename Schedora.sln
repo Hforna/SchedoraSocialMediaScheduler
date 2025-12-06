@@ -16,6 +16,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Schedora.Domain", "src\back
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{81DDED9D-158B-E303-5F62-77A2896D2A5A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E2FA76BA-9418-4BC2-B796-D27E4D354783}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Schedora.UnitTests", "src\backend\tests\Schedora.UnitTests\Schedora.UnitTests.csproj", "{34F0ADE9-B1BA-4D91-8D46-68DA84EAC1F6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{33185FBF-19A4-4A99-B2D2-84965CCD929B} = {33185FBF-19A4-4A99-B2D2-84965CCD929B}
+		{A7257F6F-6173-4A40-B605-54A2C55C0728} = {A7257F6F-6173-4A40-B605-54A2C55C0728}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Schedora.IntegrationTests", "src\backend\tests\Schedora.IntegrationTests\Schedora.IntegrationTests.csproj", "{603CB0A9-2CEA-48B9-9A09-708C7426E232}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,8 +52,20 @@ Global
 		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34F0ADE9-B1BA-4D91-8D46-68DA84EAC1F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34F0ADE9-B1BA-4D91-8D46-68DA84EAC1F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34F0ADE9-B1BA-4D91-8D46-68DA84EAC1F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34F0ADE9-B1BA-4D91-8D46-68DA84EAC1F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{603CB0A9-2CEA-48B9-9A09-708C7426E232}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{603CB0A9-2CEA-48B9-9A09-708C7426E232}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{603CB0A9-2CEA-48B9-9A09-708C7426E232}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{603CB0A9-2CEA-48B9-9A09-708C7426E232}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{34F0ADE9-B1BA-4D91-8D46-68DA84EAC1F6} = {E2FA76BA-9418-4BC2-B796-D27E4D354783}
+		{603CB0A9-2CEA-48B9-9A09-708C7426E232} = {E2FA76BA-9418-4BC2-B796-D27E4D354783}
 	EndGlobalSection
 EndGlobal

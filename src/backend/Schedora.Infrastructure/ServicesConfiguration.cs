@@ -68,6 +68,7 @@ public static class ServicesConfiguration
         services.AddScoped<IPkceService, PkceService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<ITwitterOAuthConfiguration, TwitterOAuthConfiguration>();
+        services.AddSingleton<ILinkedInOAuthConfiguration, LinkedInOAuthConfiguration>();
         services.AddScoped<IOAuthStateService,  OAuthStateService>();
     }
     

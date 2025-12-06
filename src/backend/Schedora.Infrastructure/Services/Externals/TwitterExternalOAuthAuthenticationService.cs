@@ -53,7 +53,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
             using var client = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
             var cacheService = scope.ServiceProvider.GetRequiredService<ISocialAccountCache>();
 
-            var user = await _currentUserService.GetCurrentUser();
+            var user = await _currentUserService.GetUser();
             
             var state = GenerateStrings.GenerateRandomString(32);
 

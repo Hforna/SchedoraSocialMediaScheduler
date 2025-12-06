@@ -12,7 +12,7 @@ public class CurrentUserService : ICurrentUserService
         _tokenService = tokenService;
     }
 
-    public async Task<User?> GetCurrentUser()
+    public async Task<User?> GetUser()
     {
         return await _tokenService.GetUserByToken();
     }

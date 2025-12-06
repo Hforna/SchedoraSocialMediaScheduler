@@ -12,6 +12,7 @@ using Schedora.Domain.Entities;
 using Schedora.Domain.Exceptions;
 using Schedora.Domain.Services;
 using Schedora.Domain.Services.Cache;
+using Schedora.Infrastructure.Services.ExternalServicesConfigs;
 using Schedora.Infrastructure.Utils;
 
 namespace Schedora.Infrastructure.ExternalServices;
@@ -77,16 +78,24 @@ public class LinkedInService : ILinkedInService
 
 public class LinkedInOAuthAuthenticationService : IExternalOAuthAuthenticationService
 {
-    public LinkedInOAuthAuthenticationService(IServiceProvider serviceProvider, ILogger<LinkedInOAuthAuthenticationService> logger, IConfiguration configuration)
+    public LinkedInOAuthAuthenticationService(IServiceProvider serviceProvider, ILogger<LinkedInOAuthAuthenticationService> logger, 
+        IConfiguration configuration, IOAuthStateService stateService, 
+        ICurrentUserService  currentUserService, ILinkedInOAuthConfiguration linkedInOAuthConfiguration)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
+        _currentUserService = currentUserService;
+        _linkedInOAuthConfiguration = linkedInOAuthConfiguration;
+        _stateService = stateService;
         _clientId = configuration.GetValue<string>("LinkedIn:clientId")!;
         _clientSecret = configuration.GetValue<string>("LinkedIn:clientSecret")!;
     }
 
     private readonly IServiceProvider  _serviceProvider;
     private readonly ILogger<LinkedInOAuthAuthenticationService> _logger;
+    private readonly IOAuthStateService  _stateService;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly ILinkedInOAuthConfiguration  _linkedInOAuthConfiguration;
     private readonly string _clientId;
     private readonly string _clientSecret;
 
@@ -97,24 +106,22 @@ public class LinkedInOAuthAuthenticationService : IExternalOAuthAuthenticationSe
     {
         using var scope = _serviceProvider.CreateScope();
         var httpClient = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>();
-        var cacheService = scope.ServiceProvider.GetRequiredService<ISocialAccountCache>();
-        var tokenService =  scope.ServiceProvider.GetRequiredService<ITokenService>();
         
         try
         {
-            var user = await tokenService.GetUserByToken();
+            var user = await _currentUserService.GetUser();
             
             var state = GenerateStrings.GenerateRandomString(32);
 
-            await cacheService.AddStateAuthorization(state, user.Id, SocialPlatformsNames.LinkedIn);
+            await _stateService.StorageState(state, user.Id, SocialPlatformsNames.LinkedIn);
             
             var authorizeUrl =
-                "https://www.linkedin.com/oauth/v2/authorization" +
+                $"{_linkedInOAuthConfiguration.GetOAuthUri()}authorization" +
                 $"?response_type=code" +
                 $"&client_id={_clientId}" +
                 $"&redirect_uri={redirectUrl}" +
                 $"&state={state}" +
-                "&scope=openid%20profile%20email%20w_member_social";
+                $"&scope={_linkedInOAuthConfiguration.GetScopesAvailable()}";
 
             return authorizeUrl;
         }
@@ -142,7 +149,7 @@ public class LinkedInOAuthAuthenticationService : IExternalOAuthAuthenticationSe
             };
 
             var @params = new FormUrlEncodedContent(queryParams);
-            var request = await httpClient.PostAsync("https://www.linkedin.com/oauth/v2/accessToken", @params);
+            var request = await httpClient.PostAsync($"{_linkedInOAuthConfiguration.GetOAuthUri()}accessToken", @params);
             request.EnsureSuccessStatusCode();
 
             var content = await request.Content.ReadAsStringAsync();
