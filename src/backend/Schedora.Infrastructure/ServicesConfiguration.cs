@@ -75,6 +75,9 @@ public static class ServicesConfiguration
         services.AddScoped<IOAuthStateService,  OAuthStateService>();
         services.AddScoped<ITwitterService, TwitterService>();
         
+        services.AddScoped<ITokensCryptographyService, TokensHashService>();
+        services.AddScoped<IPasswordCryptographyService, PasswordHashService>();
+        
         services.AddSingleton<ITwitterOAuthConfiguration, TwitterOAuthConfiguration>();
         services.AddSingleton<ILinkedInOAuthConfiguration, LinkedInOAuthConfiguration>();
         services.AddSingleton<ITwitterConfiguration, TwitterConfiguration>();

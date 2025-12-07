@@ -16,17 +16,20 @@ public class SocialAccountService : ISocialAccountService
     public SocialAccountService(ILogger<ISocialAccountService> logger, ITokenService tokenService, 
         IMapper mapper, IUnitOfWork uow, 
         ILinkedInService linkedInService, ISocialAccountProducer socialAccountProducer, 
-        ISocialAccountCache accountCache, IEnumerable<IExternalOAuthAuthenticationService>  externalOAuthAuthenticationService, 
-        IUserSession userSession, ITwitterService twitterService, ICookiesService cookies)
+        IOAuthStateService oauthStateService, IEnumerable<IExternalOAuthAuthenticationService>  externalOAuthAuthenticationService, 
+        IUserSession userSession, ITwitterService twitterService, ICookiesService cookies, 
+        ISocialAccountCache socialAccountCache, ITokensCryptographyService tokensCryptography)
     {
         _logger = logger;
         _cookiesService = cookies;
         _userSession = userSession;
+        _socialAccountCache = socialAccountCache;
         _externalOAuthAuthenticationService = externalOAuthAuthenticationService;
-        _accountCache = accountCache;
+        _oauthStateService = oauthStateService;
         _tokenService = tokenService;
         _mapper = mapper;
         _uow = uow;
+        _tokensCryptography = tokensCryptography;
         _linkedInService = linkedInService;
         _socialAccountProducer = socialAccountProducer; 
         _twitterService = twitterService;
@@ -34,6 +37,7 @@ public class SocialAccountService : ISocialAccountService
 
     private readonly ILogger<ISocialAccountService> _logger;
     private readonly ICookiesService _cookiesService;
+    private readonly ISocialAccountCache  _socialAccountCache;
     private readonly IUserSession _userSession;
     private readonly ITokenService _tokenService;
     private readonly IMapper _mapper;
@@ -42,7 +46,8 @@ public class SocialAccountService : ISocialAccountService
     private readonly ITwitterService  _twitterService;
     private readonly IEnumerable<IExternalOAuthAuthenticationService> _externalOAuthAuthenticationService;
     private readonly ISocialAccountProducer _socialAccountProducer;
-    private readonly ISocialAccountCache _accountCache;
+    private readonly IOAuthStateService _oauthStateService;
+    private readonly ITokensCryptographyService  _tokensCryptography;
     
     public async Task ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state)
     {
@@ -51,9 +56,9 @@ public class SocialAccountService : ISocialAccountService
         var user = await _uow.UserRepository.UserByEmail(socialUserInfos.Email) 
                    ?? throw new NotFoundException("The email provided by external service was not found in application");
         
-        var cacheState = await _accountCache.GetStateAuthorization(user.Id, SocialPlatformsNames.LinkedIn);
+        var userIdByState = await _oauthStateService.GetUserIdByStateStoraged(SocialPlatformsNames.LinkedIn, state);
 
-        if (string.IsNullOrEmpty(cacheState) || cacheState != state)
+        if (userIdByState is null || user.Id != userIdByState)
             throw new UnauthorizedException("Invalid state from query");
 
         var socialAccountExists = await _uow.SocialAccountRepository.SocialAccountLinkedToUserExists(user.Id, 
@@ -62,6 +67,10 @@ public class SocialAccountService : ISocialAccountService
 
         if (socialAccountExists)
             throw new UnauthorizedException("This account is already linked to this user");
+                
+        dto.AccessToken = _tokensCryptography.HashToken(dto.AccessToken);
+        dto.RefreshToken = _tokensCryptography.HashToken(dto.RefreshToken);
+        
         
         var socialAccount = CreateSocialAccount(dto, socialUserInfos, user.Id, SocialPlatformsNames.LinkedIn);
 
@@ -76,14 +85,18 @@ public class SocialAccountService : ISocialAccountService
     {
         var oauthService =  _externalOAuthAuthenticationService
             .FirstOrDefault(d => d.Platform.Equals(SocialPlatformsNames.Twitter));
-
-        var userId = _cookiesService.GetUserId() ?? throw new RequestException("It was not possible to get user id");
         
-        var cacheState = await _accountCache.GetStateAuthorization(userId,  SocialPlatformsNames.Twitter);
-        if(string.IsNullOrEmpty(cacheState) || cacheState != state)
+        var userIdByState = await _oauthStateService.GetUserIdByStateStoraged(SocialPlatformsNames.Twitter, state);
+        
+        if(userIdByState is null)
             throw new UnauthorizedException("Invalid state from query");
+
+        var userId = (long)userIdByState;
         
-        var codeChallenge = await _accountCache.GetCodeChallenge(userId, SocialPlatformsNames.Twitter);
+        var codeChallenge = await _socialAccountCache.GetCodeChallenge(userId, SocialPlatformsNames.Twitter);
+
+        if (string.IsNullOrEmpty(codeChallenge))
+            throw new InternalServiceException("Code challenge is null");
         
         var tokensDto = await oauthService.RequestTokensFromOAuthPlatform(code, redirectUrl, codeChallenge);
 
@@ -91,10 +104,13 @@ public class SocialAccountService : ISocialAccountService
         
         var socialAccountExists = await _uow.SocialAccountRepository.SocialAccountLinkedToUserExists(userId, 
             socialInfos.UserId,
-            SocialPlatformsNames.LinkedIn);
+            SocialPlatformsNames.Twitter);
 
         if (socialAccountExists)
             throw new UnauthorizedException("This account is already linked to this user");
+
+        tokensDto.AccessToken = _tokensCryptography.HashToken(tokensDto.AccessToken);
+        tokensDto.RefreshToken = _tokensCryptography.HashToken(tokensDto.RefreshToken);
         
         var socialAccount = CreateSocialAccount(tokensDto, socialInfos, userId, SocialPlatformsNames.Twitter);
         
@@ -112,7 +128,7 @@ public class SocialAccountService : ISocialAccountService
         var socialAccount = SocialAccount.Create(userId, platform, accountInfosDto.UserId, accountInfosDto.UserName,
             tokensDto.TokenType, tokensDto.Scopes, tokensDto.AccessToken, 
             tokensDto.RefreshToken, DateTime.UtcNow.AddMinutes(tokensDto.ExpiresIn));
-
+        
         socialAccount.FollowerCount = accountInfosDto.FollowersCount;
         socialAccount.ProfileImageUrl = !string.IsNullOrEmpty(accountInfosDto.PictureUrl) 
             ? accountInfosDto.PictureUrl

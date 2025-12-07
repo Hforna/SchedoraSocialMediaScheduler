@@ -16,8 +16,8 @@
 appsettings*.json
 **/appsettings.Development.json
 **/appsettings.json
-
-# Mono auto generated files
+.idea/
+#Mono auto generated files
 mono_crash.*
 
 # Build results

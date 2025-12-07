@@ -17,8 +17,8 @@ public class OAuthStateService : IOAuthStateService
         await _socialAccountCache.AddStateAuthorization(state, userId, platform);
     }
 
-    public async Task<string> GetStateStoraged(string platform, long userId)
+    public async Task<long?> GetUserIdByStateStoraged(string platform, string state)
     {
-        return await _socialAccountCache.GetStateAuthorization(userId, platform);
+        return await _socialAccountCache.GetUserIdByStateAuthorization(platform, state);
     }
 }

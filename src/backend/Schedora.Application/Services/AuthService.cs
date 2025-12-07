@@ -22,7 +22,7 @@ public class AuthService : IAuthService
 {
     public AuthService(ILogger<IAuthService> logger, IMapper mapper, 
         ITokenService tokenService, IUnitOfWork uow, 
-        ICryptographyService cryptographyService, IEmailService emailService, 
+        IPasswordCryptographyService cryptographyService, IEmailService emailService, 
         UserManager<User> userManager, IActivityLogService activityLogService)
     {
         _logger = logger;
@@ -39,7 +39,7 @@ public class AuthService : IAuthService
     private readonly IMapper _mapper;
     private readonly ITokenService _tokenService;
     private readonly IUnitOfWork _uow;
-    private readonly ICryptographyService _cryptographyService;
+    private readonly IPasswordCryptographyService _cryptographyService;
     private readonly IEmailService _emailService;
     private readonly UserManager<User> _userManager;
     private readonly IActivityLogService _activityLogService;

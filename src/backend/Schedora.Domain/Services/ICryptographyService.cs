@@ -2,7 +2,11 @@
 
 public interface ICryptographyService
 {
-    public string HashPassword(string password);
-    public bool ValidateHash(string password, string hash);
     public byte[] CryptographyPasswordAs256Hash(string word);
+}
+
+public interface ITokensCryptographyService
+{
+    public string HashToken(string token);
+    public bool CompareTokenHash(string token, string hash);
 }

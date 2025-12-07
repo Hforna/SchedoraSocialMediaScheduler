@@ -13,7 +13,7 @@ public interface IUserService
 public class UserService : IUserService
 {
     public UserService(ITokenService tokenService, IMapper mapper, ILogger<IUserService> logger, IUnitOfWork uow,
-        ICryptographyService cryptographyService)
+        IPasswordCryptographyService cryptographyService)
     {
         _tokenService = tokenService;
         _cryptographyService = cryptographyService;
@@ -26,7 +26,7 @@ public class UserService : IUserService
     private readonly IMapper _mapper;
     private readonly ILogger<IUserService> _logger;
     private readonly IUnitOfWork _uow;
-    private readonly ICryptographyService _cryptographyService;
+    private readonly IPasswordCryptographyService _cryptographyService;
 
     public async Task<UserResponse> GetUserAuthenticatedInfos()
     {

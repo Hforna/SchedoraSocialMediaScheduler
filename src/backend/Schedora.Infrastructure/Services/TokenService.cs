@@ -23,7 +23,8 @@ public class TokenService : ITokenService
     private readonly int _expiresAtMinutes;
     private readonly IUnitOfWork _uow;
     
-    public TokenService(ILogger<ITokenService> logger, IRequestService requestService, IServiceProvider serviceProvider, TokenValidationParameters validationParameters, string signKey,
+    public TokenService(ILogger<ITokenService> logger, IRequestService requestService, 
+        IServiceProvider serviceProvider, TokenValidationParameters validationParameters, string signKey,
         int expiresAtMinutes)
     {
         _logger = logger;
@@ -78,7 +79,7 @@ public class TokenService : ITokenService
 
         return result.Claims.ToList();
     }
-
+    
     public async Task<User?> GetUserByToken()
     {
         var token = _requestService.GetAuthenticationHeaderToken();
