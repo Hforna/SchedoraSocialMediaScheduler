@@ -14,6 +14,4 @@ public class LinkedInUserInfosDto
     public string GivenName { get; set; }
     [JsonPropertyName("family_name")]
     public string FamilyName { get; set; }
-    [JsonPropertyName("picture")]
-    public string ProfilePicture { get; set; }
 }

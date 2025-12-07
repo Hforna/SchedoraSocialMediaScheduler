@@ -15,6 +15,19 @@ public class TwitterOAuthConfiguration : ITwitterOAuthConfiguration
 
     public string GetScopesAvailable()
     {
-        return "tweet.read users.read";
+        return "tweet.read users.read offline.access";
+    }
+}
+
+public interface ITwitterConfiguration
+{
+    public string GetTwitterUri();
+}
+
+public class TwitterConfiguration : ITwitterConfiguration
+{
+    public string GetTwitterUri()
+    {
+        return "https://api.twitter.com/2/";
     }
 }

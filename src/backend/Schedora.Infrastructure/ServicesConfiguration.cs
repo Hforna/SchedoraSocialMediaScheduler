@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +11,7 @@ using Schedora.Domain.Interfaces;
 using Schedora.Domain.RabbitMq.Producers;
 using Schedora.Domain.Services;
 using Schedora.Domain.Services.Cache;
+using Schedora.Domain.Services.Session;
 using Schedora.Infrastructure.Externals.Services;
 using Schedora.Infrastructure.ExternalServices;
 using Schedora.Infrastructure.Persistence;
@@ -17,7 +20,9 @@ using Schedora.Infrastructure.RabbitMq.Producers;
 using Schedora.Infrastructure.Repositories;
 using Schedora.Infrastructure.Services;
 using Schedora.Infrastructure.Services.Cache;
+using Schedora.Infrastructure.Services.Cookies;
 using Schedora.Infrastructure.Services.ExternalServicesConfigs;
+using Schedora.Infrastructure.Services.Sessions;
 using StackExchange.Redis;
 
 namespace Schedora.Infrastructure;
@@ -67,9 +72,12 @@ public static class ServicesConfiguration
         services.AddScoped<ILinkedInService, LinkedInService>();
         services.AddScoped<IPkceService, PkceService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IOAuthStateService,  OAuthStateService>();
+        services.AddScoped<ITwitterService, TwitterService>();
+        
         services.AddSingleton<ITwitterOAuthConfiguration, TwitterOAuthConfiguration>();
         services.AddSingleton<ILinkedInOAuthConfiguration, LinkedInOAuthConfiguration>();
-        services.AddScoped<IOAuthStateService,  OAuthStateService>();
+        services.AddSingleton<ITwitterConfiguration, TwitterConfiguration>();
     }
     
     static void AddRedis(IServiceCollection services, IConfiguration configuration)
@@ -78,6 +86,23 @@ public static class ServicesConfiguration
         {
             options.Configuration = configuration.GetConnectionString("redis");
         });
+
+        services.AddDistributedMemoryCache();
+        
+        services.AddSession(options =>
+        {
+            options.IdleTimeout = TimeSpan.FromMinutes(30);
+            options.Cookie.HttpOnly = true;
+            options.Cookie.IsEssential = true;
+            options.Cookie.SameSite = SameSiteMode.None;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        });
+        services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "keys")))
+            .SetApplicationName("Schedora");
+        
+        services.AddScoped<IUserSession, UserSession>();
+        services.AddScoped<ICookiesService, CookiesService>();
 
         services.AddScoped<ISocialAccountCache, SocialAccountCache>();
     }
@@ -97,5 +122,6 @@ public static class ServicesConfiguration
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IGenericRepository, GenericRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ISocialAccountRepository, SocialAccountRepository>();
     }
 }

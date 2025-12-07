@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ using Schedora.Application.Services;
 using Schedora.Domain.Entities;
 using Schedora.Domain.Exceptions;
 using Schedora.Domain.Services;
+using Schedora.Domain.Services.Session;
 using Schedora.WebApi.Extensions;
 
 namespace Schedora.WebApi.Controllers;
@@ -17,10 +19,12 @@ public class SocialAccountsController : ControllerBase
     private readonly ISocialAccountService _socialAccountService;
     private readonly ILogger<SocialAccountsController> _logger;
     private readonly LinkGenerator _linkGenerator;
+    private readonly IUserSession _userSession;
     
     public SocialAccountsController(ISocialAccountService socialAccountService, LinkGenerator linkGenerator, 
-        ILogger<SocialAccountsController> logger)
+        ILogger<SocialAccountsController> logger, IUserSession  userSession)
     {
+        _userSession = userSession;
         _socialAccountService = socialAccountService;
         _logger = logger;
         _linkGenerator = linkGenerator;
@@ -36,6 +40,16 @@ public class SocialAccountsController : ControllerBase
 
         if (service is null)
             throw new RequestException("Invalid platform name");
+
+        var user = HttpContext.User;
+        var userId = user.Claims.FirstOrDefault(d => d.Type == ClaimTypes.Sid)!.Value;
+        
+        HttpContext.Response.Cookies.Append("UserId", userId, new CookieOptions()
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+        });
         
         var result = await service.GetOAuthRedirectUrl(redirectUrl);
 
@@ -55,12 +69,23 @@ public class SocialAccountsController : ControllerBase
         var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, "LinkedInCallback");
         var redirectUri = $"{HttpContext.GetBaseUri()}{callbackEndpoint![1..]}";
         
-        var tokensResult = await externalService!.RequestAccessFromOAuthPlatform(code, redirectUri);
+        var tokensResult = await externalService!.RequestTokensFromOAuthPlatform(code, redirectUri);
         
         await _socialAccountService.ConfigureOAuthTokensFromLinkedin(tokensResult, state);
 
         return Ok();
     }
+    
+    [HttpGet("twitter/callback")]
+    [EndpointName("TwitterCallback")]
+    public async Task<IActionResult> TwitterCallback([FromQuery]string state, [FromQuery]string code)
+    {
+        var baseUri = HttpContext.GetBaseUri();
+        var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, "TwitterCallback");
+        var redirectUri = $"{HttpContext.GetBaseUri()}{callbackEndpoint![1..]}";
 
-
+        await _socialAccountService.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUri);
+        
+        return Ok();
+    }
 }

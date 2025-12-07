@@ -9,8 +9,7 @@ public static class SocialAccountInfosDtoFaker
     {
         return new Faker<SocialAccountInfosDto>()
             .RuleFor(d => d.Email, f => f.Internet.Email())
-            .RuleFor(d => d.FirstName, f => f.Name.FirstName())
-            .RuleFor(d => d.LastName, f => f.Name.LastName())
+            .RuleFor(d => d.FullName, f => f.Name.FullName())
             .RuleFor(d => d.UserName, f => f.Internet.UserName())
             .RuleFor(d => d.UserId, d => Guid.NewGuid().ToString());
     }

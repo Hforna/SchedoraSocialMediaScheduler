@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -13,6 +14,51 @@ using Schedora.Infrastructure.Services.ExternalServicesConfigs;
 using Schedora.Infrastructure.Utils;
 
 namespace Schedora.Infrastructure.ExternalServices;
+
+public class TwitterService : ITwitterService
+{
+    public TwitterService(ILogger<TwitterService> logger, IServiceProvider serviceProvider, ITwitterConfiguration configuration)
+    {
+        _logger = logger;
+        _serviceProvider = serviceProvider;
+        _configuration = configuration;
+    }
+
+    private readonly ILogger<TwitterService> _logger;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ITwitterConfiguration _configuration;
+    
+    public async Task<SocialAccountInfosDto> GetUserSocialAccountInfos(string accessToken, string tokenType)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var httpClient = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
+        
+        if(tokenType == "Bearer")
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+        var request = await httpClient
+            .GetAsync($"{_configuration}users/me?user.fields=created_at,description,location,profile_image_url,public_metrics");
+
+        var content = await request.Content.ReadAsStringAsync();
+
+        _logger.LogInformation("Content response from request {content}", content);
+        
+        var deserialize = JsonSerializer.Deserialize<TwitterUserInfosData>(content);
+        
+        var dto =  new SocialAccountInfosDto()
+        {
+            UserId = deserialize!.Data.Id,
+            UserName =  deserialize.Data.Username,
+            Email =  "",
+            FullName = deserialize.Data.Name,
+            PictureUrl = deserialize.Data.Profile_Image_Url,
+            FollowersCount = deserialize.Data.Public_Metrics.Followers_Count,
+            FollowingCount = deserialize.Data.Public_Metrics.Following_Count,
+        };
+
+        return dto;
+    }
+}
 
 public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthenticationService
 {
@@ -60,6 +106,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
             await _oauthStateService.StorageState(state, user!.Id, SocialPlatformsNames.Twitter);
             
             var codeChallenge = _pkceService.GenerateCodeChallenge();
+            await _pkceService.StorageCodeChallenge(codeChallenge, user.Id,  SocialPlatformsNames.Twitter);
 
             var scopes = _oauthConfig.GetScopesAvailable();
             
@@ -81,9 +128,41 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
         }
     }
 
-    public Task<ExternalServicesTokensDto> RequestAccessFromOAuthPlatform(string code, string redirectUrl)
+    public async Task<ExternalServicesTokensDto> RequestTokensFromOAuthPlatform(string code, string redirectUrl, string codeVerifier = "")
     {
-        throw new NotImplementedException();
+        using var scope = _serviceProvider.CreateScope();
+        var httpClient  = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
+
+        var queryParams = new Dictionary<string, string>()
+        {
+            { "code", code },
+            { "grant_type", "authorization_code" },
+            { "client_id", _clientId },
+            { "redirect_uri", redirectUrl },
+            { "code_verifier", codeVerifier }
+        };
+        
+        var url = _oauthConfig.GetTwitterOAuthUri() + "token";
+        
+        try
+        {
+            var @params = new FormUrlEncodedContent(queryParams);
+            var request = await httpClient.PostAsync(url, @params);
+
+            request.EnsureSuccessStatusCode();
+        
+            var content = await request.Content.ReadAsStringAsync();
+        
+            var deserialize = JsonSerializer.Deserialize<ExternalServicesTokensDto>(content);
+
+            return deserialize!;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, e.Message);
+            
+            throw;
+        }
     }
     
 }
@@ -91,11 +170,19 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
 public interface IPkceService
 {
     public string GenerateCodeChallenge();
+    public Task StorageCodeChallenge(string code, long userId, string platform);
 }
 
 public class PkceService : IPkceService
 {
     private readonly ICryptographyService _cryptographyService;
+    private readonly ISocialAccountCache _socialAccountCache;
+
+    public PkceService(ICryptographyService cryptographyService, ISocialAccountCache socialAccountCache)
+    {
+        _cryptographyService = cryptographyService;
+        _socialAccountCache = socialAccountCache;
+    }
 
     public string GenerateCodeChallenge()
     {
@@ -103,6 +190,11 @@ public class PkceService : IPkceService
         var stringAs256 = _cryptographyService.CryptographyPasswordAs256Hash(randomString);
         
         return Base64UrlEncode(stringAs256);
+    }
+
+    public async Task StorageCodeChallenge(string code, long userId, string platform)
+    {
+        await _socialAccountCache.AddStateAuthorization(code, userId, platform);
     }
 
     private string Base64UrlEncode(byte[] data)

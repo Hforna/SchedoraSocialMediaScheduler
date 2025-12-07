@@ -4,11 +4,13 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Schedora.Application.Services;
+using Schedora.Domain.Dtos;
 using Schedora.Domain.Exceptions;
 using Schedora.Domain.Interfaces;
 using Schedora.Domain.RabbitMq.Producers;
 using Schedora.Domain.Services;
 using Schedora.Domain.Services.Cache;
+using Schedora.Domain.Services.Session;
 using Schedora.UnitTests.Fakers.Dtos;
 using Schedora.UnitTests.Mocks;
 
@@ -24,6 +26,8 @@ public class SocialAccountServiceTests
     private Mock<ILinkedInService> _linkedInService;
     private Mock<ISocialAccountProducer> _socialAccountProducer;
     private Mock<ISocialAccountCache> _accountCache;
+    private Mock<IUserSession> _userSession;
+    private Mock<IEnumerable<IExternalOAuthAuthenticationService>> _externalOAuthAuthenticationServices;
 
     public SocialAccountServiceTests()
     {
@@ -34,6 +38,8 @@ public class SocialAccountServiceTests
         _linkedInService = new Mock<ILinkedInService>();
         _socialAccountProducer = new Mock<ISocialAccountProducer>();
         _accountCache = new Mock<ISocialAccountCache>();
+        _userSession = new Mock<IUserSession>();
+        _externalOAuthAuthenticationServices = new Mock<IEnumerable<IExternalOAuthAuthenticationService>>();
 
         _socialAccountService = new SocialAccountService(
             _logger.Object,
@@ -42,7 +48,9 @@ public class SocialAccountServiceTests
             _uow.Object,
             _linkedInService.Object,
             _socialAccountProducer.Object,
-            _accountCache.Object
+            _accountCache.Object,
+            _externalOAuthAuthenticationServices.Object,
+            _userSession.Object
         );
     }
 
@@ -60,4 +68,6 @@ public class SocialAccountServiceTests
 
         await result.Should().ThrowAsync<NotFoundException>("The email provided by external service was not found in application");
     }
+    
+    
 }

@@ -79,8 +79,6 @@ builder.Services.AddAuthentication(opt =>
 
 builder.Services.Configure<RabbitMqConnection>(builder.Configuration.GetSection("RabbitMq"));
 
-builder.Services.AddMemoryCache();
-
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddHttpClient();
@@ -100,6 +98,8 @@ if (app.Environment.IsDevelopment())
 //app.UseHttpsRedirection();
 
 app.UseAuthentication();
+
+app.UseSession();
 
 app.UseAuthorization();
 

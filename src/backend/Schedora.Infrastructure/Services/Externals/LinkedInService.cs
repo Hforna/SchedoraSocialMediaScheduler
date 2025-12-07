@@ -54,9 +54,7 @@ public class LinkedInService : ILinkedInService
             var response = new SocialAccountInfosDto()
             {
                 Email = deserialize.Email,
-                FirstName = deserialize.GivenName,
-                LastName = deserialize.FamilyName,
-                ProfileImageUrl = deserialize.ProfilePicture,
+                FullName = $"{deserialize.GivenName} {deserialize.FamilyName}",
                 UserId = deserialize.Id,
                 UserName = deserialize.UserName
             };
@@ -132,7 +130,7 @@ public class LinkedInOAuthAuthenticationService : IExternalOAuthAuthenticationSe
         }
     }
 
-    public async Task<ExternalServicesTokensDto> RequestAccessFromOAuthPlatform(string code, string redirectUrl)
+    public async Task<ExternalServicesTokensDto> RequestTokensFromOAuthPlatform(string code, string redirectUrl, string codeVerifier = "")
     {
         using var scope = _serviceProvider.CreateScope();
         var httpClient = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
