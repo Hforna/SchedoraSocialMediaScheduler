@@ -7,14 +7,15 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src/backend
 
-COPY ["Schedora.WebApi/Schedora.WebApi.csproj", "Schedora.WebApi/"]
-COPY ["Schedora.Application/Schedora.Application.csproj", "Schedora.Application/"]
-COPY ["Schedora.Domain/Schedora.Domain.csproj", "Schedora.Domain/"]
-COPY ["Schedora.Infrastructure/Schedora.Infrastructure.csproj", "Schedora.Infrastructure/"]
+COPY ["src/backend/Schedora.WebApi/Schedora.WebApi.csproj", "Schedora.WebApi/"]
+COPY ["src/backend/Schedora.Application/Schedora.Application.csproj", "Schedora.Application/"]
+COPY ["src/backend/Schedora.Domain/Schedora.Domain.csproj", "Schedora.Domain/"]
+COPY ["src/backend/Schedora.Infrastructure/Schedora.Infrastructure.csproj", "Schedora.Infrastructure/"]
 
 RUN dotnet restore "Schedora.WebApi/Schedora.WebApi.csproj"
 
 COPY . .
+COPY src/backend ./
 
 WORKDIR "/src/backend/Schedora.WebApi"
 RUN dotnet build "Schedora.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
