@@ -28,8 +28,4 @@
     <ProjectReference Include="..\..\Schedora.Domain\Schedora.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Fakers\Entities\" />
-  </ItemGroup>
-
 </Project>
