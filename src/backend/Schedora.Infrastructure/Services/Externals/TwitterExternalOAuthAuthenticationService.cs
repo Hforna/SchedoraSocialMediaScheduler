@@ -33,11 +33,11 @@ public class TwitterService : ITwitterService
         using var scope = _serviceProvider.CreateScope();
         var httpClient = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
         
-        if(tokenType == "Bearer")
+        if(tokenType.Equals("Bearer",  StringComparison.InvariantCultureIgnoreCase))
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         
         var request = await httpClient
-            .GetAsync($"{_configuration}users/me?user.fields=created_at,description,location,profile_image_url,public_metrics");
+            .GetAsync($"{_configuration.GetTwitterUri()}users/me?user.fields=created_at,description,location,profile_image_url,public_metrics");
 
         var content = await request.Content.ReadAsStringAsync();
 
@@ -51,9 +51,9 @@ public class TwitterService : ITwitterService
             UserName =  deserialize.Data.Username,
             Email =  "",
             FullName = deserialize.Data.Name,
-            PictureUrl = deserialize.Data.Profile_Image_Url,
-            FollowersCount = deserialize.Data.Public_Metrics.Followers_Count,
-            FollowingCount = deserialize.Data.Public_Metrics.Following_Count,
+            PictureUrl = deserialize.Data.ProfileImageUrl,
+            FollowersCount = deserialize.Data.PublicMetrics.FollowersCount,
+            FollowingCount = deserialize.Data.PublicMetrics.FollowingCount,
         };
 
         return dto;
@@ -108,7 +108,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
             await _oauthStateService.StorageState(state, user!.Id, SocialPlatformsNames.Twitter);
             
             var codeChallenge = _pkceService.GenerateCodeChallenge();
-            await _pkceService.StorageCodeChallenge(codeChallenge, user.Id,  SocialPlatformsNames.Twitter);
+            await _pkceService.StorageCodeChallenge(codeChallenge.codeVerfier, user.Id,  SocialPlatformsNames.Twitter);
 
             var scopes = _oauthConfig.GetScopesAvailable();
             
@@ -118,7 +118,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
                                                $"redirect_uri={Uri.EscapeDataString(uri)}&" +
                                                $"scope={Uri.EscapeDataString(scopes)}&" +
                                                $"state={state}&" +
-                                               $"code_challenge={codeChallenge}&" +
+                                               $"code_challenge={codeChallenge.codeChallenge}&" +
                                                $"code_challenge_method=S256";
 
         }
@@ -134,26 +134,31 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
     {
         using var scope = _serviceProvider.CreateScope();
         var httpClient  = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
-
-        var queryParams = new Dictionary<string, string>()
+        
+        var authorizationCode = $"{_clientId}:{_clientSecret}";
+        var getAuthorizationBytes = Encoding.UTF8.GetBytes(authorizationCode);
+        var base64 = Convert.ToBase64String(getAuthorizationBytes);
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64);
+        
+        var tokenRequest = new HttpRequestMessage(HttpMethod.Post, "https://api.x.com/2/oauth2/token");
+        tokenRequest.Content = new FormUrlEncodedContent(new Dictionary<string,string>
         {
-            { "code", code },
             { "grant_type", "authorization_code" },
-            { "client_id", _clientId },
+            { "code", code },
             { "redirect_uri", redirectUrl },
+            { "client_id", _clientId },
             { "code_verifier", codeVerifier }
-        };
+        });
         
         var url = _oauthConfig.GetTwitterOAuthUri() + "token";
         
         try
         {
-            var @params = new FormUrlEncodedContent(queryParams);
-            var request = await httpClient.PostAsync(url, @params);
-
-            request.EnsureSuccessStatusCode();
-        
+            var request = await httpClient.SendAsync(tokenRequest);
+            
             var content = await request.Content.ReadAsStringAsync();
+            
+            request.EnsureSuccessStatusCode();
         
             var deserialize = JsonSerializer.Deserialize<ExternalServicesTokensDto>(content);
 
@@ -171,7 +176,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
 
 public interface IPkceService
 {
-    public string GenerateCodeChallenge();
+    public (string codeChallenge, string codeVerfier) GenerateCodeChallenge();
     public Task StorageCodeChallenge(string code, long userId, string platform);
 }
 
@@ -186,12 +191,12 @@ public class PkceService : IPkceService
         _socialAccountCache = socialAccountCache;
     }
 
-    public string GenerateCodeChallenge()
+    public (string codeChallenge, string codeVerfier) GenerateCodeChallenge()
     {
         var randomString = GenerateStrings.GenerateRandomString(128);
         var stringAs256 = _cryptographyService.CryptographyPasswordAs256Hash(randomString);
         
-        return Base64UrlEncode(stringAs256);
+        return (Base64UrlEncode(stringAs256), randomString);
     }
 
     public async Task StorageCodeChallenge(string code, long userId, string platform)

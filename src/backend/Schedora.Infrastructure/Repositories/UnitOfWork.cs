@@ -7,9 +7,11 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly DataContext _context;
 
-    public UnitOfWork(DataContext context, IGenericRepository genericRepository, IUserRepository userRepository)
+    public UnitOfWork(DataContext context, IGenericRepository genericRepository, IUserRepository userRepository,  ISocialAccountRepository socialAccountRepository)
     {
         _context = context;
+        
+        SocialAccountRepository = socialAccountRepository;
         GenericRepository = genericRepository;
         UserRepository = userRepository;
     }

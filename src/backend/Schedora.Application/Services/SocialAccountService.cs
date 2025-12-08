@@ -51,7 +51,7 @@ public class SocialAccountService : ISocialAccountService
     
     public async Task ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state)
     {
-        var userId = await GetUserIdByState(state);
+        var userId = await GetUserIdByState(state, SocialPlatformsNames.LinkedIn);
         
         var socialUserInfos = await _linkedInService.GetSocialAccountInfos(dto.AccessToken, "Bearer");
         
@@ -77,7 +77,7 @@ public class SocialAccountService : ISocialAccountService
         var oauthService =  _externalOAuthAuthenticationService
             .FirstOrDefault(d => d.Platform.Equals(SocialPlatformsNames.Twitter));
 
-        var userId = await GetUserIdByState(state);
+        var userId = await GetUserIdByState(state, SocialPlatformsNames.Twitter);
         
         var codeChallenge = await _socialAccountCache.GetCodeChallenge(userId, SocialPlatformsNames.Twitter);
 
@@ -105,9 +105,9 @@ public class SocialAccountService : ISocialAccountService
         await _socialAccountProducer.SendAccountConnected(producerDto);
     }
 
-    private async Task<long> GetUserIdByState(string state)
+    private async Task<long> GetUserIdByState(string state, string platform)
     {
-        var userIdByState = await _oauthStateService.GetUserIdByStateStoraged(SocialPlatformsNames.LinkedIn, state);
+        var userIdByState = await _oauthStateService.GetUserIdByStateStoraged(platform, state);
 
         if (userIdByState is null)
             throw new UnauthorizedException("Invalid state from query");
@@ -121,7 +121,7 @@ public class SocialAccountService : ISocialAccountService
     {
         var socialAccount = SocialAccount.Create(userId, platform, accountInfosDto.UserId, accountInfosDto.UserName,
             tokensDto.TokenType, tokensDto.Scopes, tokensDto.AccessToken, 
-            tokensDto.RefreshToken, DateTime.UtcNow.AddMinutes(tokensDto.ExpiresIn));
+            tokensDto.RefreshToken, DateTime.UtcNow.AddSeconds(tokensDto.ExpiresIn));
         
         socialAccount.FollowerCount = accountInfosDto.FollowersCount;
         socialAccount.ProfileImageUrl = !string.IsNullOrEmpty(accountInfosDto.PictureUrl) 
@@ -135,6 +135,7 @@ public class SocialAccountService : ISocialAccountService
     {
         dto.AccessToken = _tokensCryptography.HashToken(dto.AccessToken);
         dto.RefreshToken = _tokensCryptography.HashToken(dto.RefreshToken);
+        
         return dto;
     }
 }
