@@ -100,6 +100,7 @@ public static class ServicesConfiguration
             options.Cookie.SameSite = SameSiteMode.None;
             options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         });
+        
         services.AddDataProtection()
             .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "keys")))
             .SetApplicationName("Schedora");

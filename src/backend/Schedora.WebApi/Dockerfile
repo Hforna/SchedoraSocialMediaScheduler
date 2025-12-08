@@ -5,7 +5,7 @@ EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
-WORKDIR /src/backend
+WORKDIR /src
 
 COPY ["src/backend/Schedora.WebApi/Schedora.WebApi.csproj", "Schedora.WebApi/"]
 COPY ["src/backend/Schedora.Application/Schedora.Application.csproj", "Schedora.Application/"]
@@ -17,14 +17,14 @@ RUN dotnet restore "Schedora.WebApi/Schedora.WebApi.csproj"
 COPY . .
 COPY src/backend ./
 
-WORKDIR "/src/backend/Schedora.WebApi"
+WORKDIR "/src/Schedora.WebApi"
 RUN dotnet build "Schedora.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "Schedora.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-COPY --from=build /src/backend/Schedora.Infrastructure/EmailTemplates/ /app/publish/EmailTemplates/
+COPY --from=build /src/Schedora.Infrastructure/EmailTemplates/ /app/publish/EmailTemplates/
 
 FROM base AS final
 WORKDIR /app

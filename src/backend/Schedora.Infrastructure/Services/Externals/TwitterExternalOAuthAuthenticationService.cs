@@ -71,6 +71,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
     private readonly ITwitterOAuthConfiguration _oauthConfig;
     private readonly IOAuthStateService _oauthStateService;
     private readonly string _clientId;
+    private readonly string _clientSecret;
     
     public TwitterExternalOAuthAuthenticationService(IServiceProvider serviceProvider, ILogger<TwitterExternalOAuthAuthenticationService> logger, 
         IConfiguration configuration, IPkceService pkceService, 
@@ -85,8 +86,9 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
         _oauthConfig = oauthConfig;
         
         string clientId = configuration.GetValue<string>("Twitter:ClientId");
-        string consumerSecret = configuration.GetValue<string>("Twitter:ConsumerSecret");
+        string clientSecret = configuration.GetValue<string>("Twitter:ClientSecret");
 
+        _clientSecret = clientSecret;
         _clientId = clientId;
     }
     
@@ -110,7 +112,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
 
             var scopes = _oauthConfig.GetScopesAvailable();
             
-            return $"{_oauthConfig.GetTwitterOAuthUri()}authorize?" +
+            return $"{_oauthConfig.GetTwitterOAuthAuthorizeUri()}authorize?" +
                                                $"response_type=code" +
                                                $"&client_id={_clientId}&" +
                                                $"redirect_uri={Uri.EscapeDataString(uri)}&" +
@@ -194,7 +196,7 @@ public class PkceService : IPkceService
 
     public async Task StorageCodeChallenge(string code, long userId, string platform)
     {
-        await _socialAccountCache.AddStateAuthorization(code, userId, platform);
+        await _socialAccountCache.AddCodeChallenge(code, userId, platform);
     }
 
     private string Base64UrlEncode(byte[] data)

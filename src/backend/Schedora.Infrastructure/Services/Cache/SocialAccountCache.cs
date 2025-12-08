@@ -19,12 +19,12 @@ public class SocialAccountCache : ISocialAccountCache
     {
         var bytes = Encoding.UTF8.GetBytes(userId.ToString());
         await _cache.SetAsync($"state:{platform}:{state}", bytes, 
-            new DistributedCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(60)));
+            new DistributedCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(200)));
     }
 
     public async Task<long?> GetUserIdByStateAuthorization(string platform, string state)
     {
-        var stateBytes = await _cache.GetAsync($"state:{platform}");
+        var stateBytes = await _cache.GetAsync($"state:{platform}:{state}");
 
         if (stateBytes is null)
             return null;
@@ -39,7 +39,7 @@ public class SocialAccountCache : ISocialAccountCache
         var bytes = Encoding.UTF8.GetBytes(code);
         
         await _cache.SetAsync($"code_challenge:{platform}:{userId}", bytes,  
-            new DistributedCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(60)));
+            new DistributedCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(200)));
     }
 
     public async Task<string> GetCodeChallenge(long userId, string platform)

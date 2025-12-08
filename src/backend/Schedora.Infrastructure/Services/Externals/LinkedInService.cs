@@ -147,7 +147,8 @@ public class LinkedInOAuthAuthenticationService : IExternalOAuthAuthenticationSe
             };
 
             var @params = new FormUrlEncodedContent(queryParams);
-            var request = await httpClient.PostAsync($"{_linkedInOAuthConfiguration.GetOAuthUri()}accessToken", @params);
+            var request =
+                await httpClient.PostAsync($"{_linkedInOAuthConfiguration.GetOAuthUri()}accessToken", @params);
             request.EnsureSuccessStatusCode();
 
             var content = await request.Content.ReadAsStringAsync();
@@ -161,6 +162,12 @@ public class LinkedInOAuthAuthenticationService : IExternalOAuthAuthenticationSe
         catch (HttpRequestException he)
         {
             _logger.LogError(he, he.Message);
+            throw;
+        }
+        catch (ExternalServiceException ex)
+        {
+            _logger.LogError(ex, ex.Message);
+
             throw;
         }
         catch (Exception e)

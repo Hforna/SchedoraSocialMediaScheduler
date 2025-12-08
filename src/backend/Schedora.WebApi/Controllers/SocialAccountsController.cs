@@ -40,16 +40,6 @@ public class SocialAccountsController : ControllerBase
 
         if (service is null)
             throw new RequestException("Invalid platform name");
-
-        var user = HttpContext.User;
-        var userId = user.Claims.FirstOrDefault(d => d.Type == ClaimTypes.Sid)!.Value;
-        
-        HttpContext.Response.Cookies.Append("UserId", userId, new CookieOptions()
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Lax,
-        });
         
         var result = await service.GetOAuthRedirectUrl(redirectUrl);
 
@@ -81,8 +71,9 @@ public class SocialAccountsController : ControllerBase
     public async Task<IActionResult> TwitterCallback([FromQuery]string state, [FromQuery]string code)
     {
         var baseUri = HttpContext.GetBaseUri();
+        baseUri = "https://22dc70dcbe2f.ngrok-free.app/";
         var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, "TwitterCallback");
-        var redirectUri = $"{HttpContext.GetBaseUri()}{callbackEndpoint![1..]}";
+        var redirectUri = $"{baseUri}{callbackEndpoint![1..]}";
 
         await _socialAccountService.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUri);
         

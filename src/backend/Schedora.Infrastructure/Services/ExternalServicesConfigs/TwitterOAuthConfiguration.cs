@@ -3,12 +3,18 @@ namespace Schedora.Infrastructure.Services.ExternalServicesConfigs;
 public interface ITwitterOAuthConfiguration
 {
     public string GetTwitterOAuthUri();
+    public string GetTwitterOAuthAuthorizeUri();
     public string GetScopesAvailable();
 }
 
 public class TwitterOAuthConfiguration : ITwitterOAuthConfiguration
 {
     public string GetTwitterOAuthUri()
+    {
+        return "https://api.x.com/2/oauth2/";
+    }
+
+    public string GetTwitterOAuthAuthorizeUri()
     {
         return "https://x.com/i/oauth2/";
     }
