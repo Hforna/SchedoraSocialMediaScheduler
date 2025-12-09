@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Data.SqlClient;
@@ -10,11 +11,13 @@ using Schedora.Infrastructure;
 using Schedora.Infrastructure.Externals.Services;
 using Schedora.Infrastructure.RabbitMq;
 using Schedora.Infrastructure.Services;
+using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerExamplesFromAssemblies(Assembly.GetExecutingAssembly());
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
@@ -27,6 +30,23 @@ builder.Services.AddSwaggerGen(options =>
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
+    
+    options.SwaggerDoc("v1", new OpenApiInfo()
+    {
+        Version = "v1",
+        Title = "Schedora API",
+        Description = "A social media management api",
+        Contact = new OpenApiContact()
+        {
+            Email = "hfornabest@gmail.com",
+            Url = new Uri("https://github.com/Hforna"),
+            Name = "Henrique",
+        },
+    });
+    
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath);
 
     options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
@@ -40,11 +60,14 @@ builder.Services.AddSwaggerGen(options =>
                 },
                 Scheme = "oauth2",
                 Name = "Bearer",
-                In = ParameterLocation.Header
+                In = ParameterLocation.Header,
+                
             },
             new List<string>()
         }
     });
+    
+    options.ExampleFilters();
 });
 
 builder.Services.AddRouting(d => d.LowercaseUrls = true);
