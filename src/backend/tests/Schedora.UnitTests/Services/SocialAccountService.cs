@@ -77,7 +77,7 @@ public class SocialAccountServiceTests
         var result = async () => await _service.ConfigureOAuthTokensFromLinkedin(tokensDto, state);
         
         await result.Should().ThrowAsync<UnauthorizedException>("Invalid state from query");
-        _oauthStateService.Verify(d => d.GetUserIdByStateStoraged(SocialPlatformsNames.LinkedIn, state));
+        _oauthStateService.Verify(d => d.GetStateStoraged(SocialPlatformsNames.LinkedIn, state));
     }
 
     [Fact]
@@ -87,7 +87,8 @@ public class SocialAccountServiceTests
         var state = Guid.NewGuid().ToString();
         long id = 1;
 
-        _oauthStateService.Setup(d => d.GetUserIdByStateStoraged(SocialPlatformsNames.LinkedIn, state)).ReturnsAsync(1);
+        _oauthStateService.Setup(d => d.GetStateStoraged(SocialPlatformsNames.LinkedIn, state))
+            .ReturnsAsync(new StateResponseDto() { UserId = id, RedirectUrl = "https://localhost"});
 
         _linkedInService
             .Setup(d => d.GetSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType))
@@ -106,7 +107,8 @@ public class SocialAccountServiceTests
         long id = 1;
         var socialAccountInfos = SocialAccountInfosDtoFaker.Generate();
 
-        _oauthStateService.Setup(d => d.GetUserIdByStateStoraged(SocialPlatformsNames.LinkedIn, state)).ReturnsAsync(1);
+        _oauthStateService.Setup(d => d.GetStateStoraged(SocialPlatformsNames.LinkedIn, state))
+            .ReturnsAsync(new StateResponseDto() { UserId = id, RedirectUrl = "https://localhost"});
 
         _linkedInService
             .Setup(d => d.GetSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType))
@@ -130,7 +132,8 @@ public class SocialAccountServiceTests
         long id = 1;
         var socialAccountInfos = SocialAccountInfosDtoFaker.Generate();
 
-        _oauthStateService.Setup(d => d.GetUserIdByStateStoraged(SocialPlatformsNames.LinkedIn, state)).ReturnsAsync(1);
+        _oauthStateService.Setup(d => d.GetStateStoraged(SocialPlatformsNames.LinkedIn, state))
+            .ReturnsAsync(new StateResponseDto() { UserId = id, RedirectUrl = "https://localhost"});
 
         _linkedInService
             .Setup(d => d.GetSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType))
@@ -156,8 +159,8 @@ public class SocialAccountServiceTests
         var socialAccountInfos = SocialAccountInfosDtoFaker.Generate();
         SocialAccount capturedAccount = null;
 
-        _oauthStateService.Setup(d => d.GetUserIdByStateStoraged(SocialPlatformsNames.LinkedIn, state))
-            .ReturnsAsync(userId);
+        _oauthStateService.Setup(d => d.GetStateStoraged(SocialPlatformsNames.LinkedIn, state))
+            .ReturnsAsync(new StateResponseDto() { UserId =  userId, RedirectUrl = "https://localhost"});
     
         _linkedInService.Setup(d => d.GetSocialAccountInfos(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(socialAccountInfos);

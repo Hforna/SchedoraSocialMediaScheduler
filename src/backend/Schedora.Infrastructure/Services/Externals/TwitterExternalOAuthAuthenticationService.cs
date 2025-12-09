@@ -93,7 +93,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
     }
     
 
-    public async Task<string> GetOAuthRedirectUrl(string uri)
+    public async Task<string> GetOAuthRedirectUrl(string redirectUri, string callbackUrl)
     {
         try
         {
@@ -105,7 +105,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
             
             var state = GenerateStrings.GenerateRandomString(32);
 
-            await _oauthStateService.StorageState(state, user!.Id, SocialPlatformsNames.Twitter);
+            await _oauthStateService.StorageState(state, user!.Id, SocialPlatformsNames.Twitter, redirectUri);
             
             var codeChallenge = _pkceService.GenerateCodeChallenge();
             await _pkceService.StorageCodeChallenge(codeChallenge.codeVerfier, user.Id,  SocialPlatformsNames.Twitter);
@@ -115,7 +115,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
             return $"{_oauthConfig.GetTwitterOAuthAuthorizeUri()}authorize?" +
                                                $"response_type=code" +
                                                $"&client_id={_clientId}&" +
-                                               $"redirect_uri={Uri.EscapeDataString(uri)}&" +
+                                               $"redirect_uri={Uri.EscapeDataString(callbackUrl)}&" +
                                                $"scope={Uri.EscapeDataString(scopes)}&" +
                                                $"state={state}&" +
                                                $"code_challenge={codeChallenge.codeChallenge}&" +

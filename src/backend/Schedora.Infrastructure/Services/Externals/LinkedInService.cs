@@ -100,7 +100,7 @@ public class LinkedInOAuthAuthenticationService : IExternalOAuthAuthenticationSe
 
     public string Platform { get; } = SocialPlatformsNames.LinkedIn;
     
-    public async Task<string> GetOAuthRedirectUrl(string redirectUrl)
+    public async Task<string> GetOAuthRedirectUrl(string redirectUrl, string callbackUrl)
     {
         using var scope = _serviceProvider.CreateScope();
         var httpClient = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>();
@@ -111,13 +111,13 @@ public class LinkedInOAuthAuthenticationService : IExternalOAuthAuthenticationSe
             
             var state = GenerateStrings.GenerateRandomString(32);
 
-            await _stateService.StorageState(state, user.Id, SocialPlatformsNames.LinkedIn);
+            await _stateService.StorageState(state, user.Id, SocialPlatformsNames.LinkedIn, redirectUrl);
             
             var authorizeUrl =
                 $"{_linkedInOAuthConfiguration.GetOAuthUri()}authorization" +
                 $"?response_type=code" +
                 $"&client_id={_clientId}" +
-                $"&redirect_uri={redirectUrl}" +
+                $"&redirect_uri={callbackUrl}" +
                 $"&state={state}" +
                 $"&scope={_linkedInOAuthConfiguration.GetScopesAvailable()}";
 

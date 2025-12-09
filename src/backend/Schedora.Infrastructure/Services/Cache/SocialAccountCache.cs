@@ -15,23 +15,29 @@ public class SocialAccountCache : ISocialAccountCache
         _cache = cache;
     }
 
-    public async Task AddStateAuthorization(string state, long userId, string platform)
+    public async Task AddStateAuthorization(string state, long userId, string platform, string redirectUrl)
     {
-        var bytes = Encoding.UTF8.GetBytes(userId.ToString());
+        var dto = new StateResponseDto()
+        {
+            RedirectUrl = redirectUrl,
+            UserId = userId,
+        };
+        var serialize = JsonSerializer.Serialize(dto);
+        var bytes = Encoding.UTF8.GetBytes(serialize);
         await _cache.SetAsync($"state:{platform}:{state}", bytes, 
             new DistributedCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(200)));
     }
 
-    public async Task<long?> GetUserIdByStateAuthorization(string platform, string state)
+    public async Task<StateResponseDto?> GetUserIdByStateAuthorization(string platform, string state)
     {
         var stateBytes = await _cache.GetAsync($"state:{platform}:{state}");
 
         if (stateBytes is null)
             return null;
         
-        var userId =  Encoding.UTF8.GetString(stateBytes);
+        var responseObject = Encoding.UTF8.GetString(stateBytes);
         
-        return long.Parse(userId);
+        return JsonSerializer.Deserialize<StateResponseDto>(responseObject)!;
     }
 
     public async Task AddCodeChallenge(string code, long userId, string platform)

@@ -9,6 +9,7 @@ public interface ISocialAccountService
 {
     public Task ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state);
     public Task ConfigureOAuthTokensFromOAuthTwitter(string state, string code, string redirectUrl);
+    public Task<StateResponseDto> GetStateResponse(string state, string platform);
 }
 
 public class SocialAccountService : ISocialAccountService
@@ -51,7 +52,8 @@ public class SocialAccountService : ISocialAccountService
     
     public async Task ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state)
     {
-        var userId = await GetUserIdByState(state, SocialPlatformsNames.LinkedIn);
+        var stateResponse = await GetStateResponse(state, SocialPlatformsNames.LinkedIn);
+        var userId = stateResponse.UserId;
         
         var socialUserInfos = await _linkedInService.GetSocialAccountInfos(dto.AccessToken, "Bearer");
         
@@ -77,7 +79,8 @@ public class SocialAccountService : ISocialAccountService
         var oauthService =  _externalOAuthAuthenticationService
             .FirstOrDefault(d => d.Platform.Equals(SocialPlatformsNames.Twitter));
 
-        var userId = await GetUserIdByState(state, SocialPlatformsNames.Twitter);
+        var stateResponse = await GetStateResponse(state, SocialPlatformsNames.Twitter);
+        var userId = stateResponse.UserId;
         
         var codeChallenge = await _socialAccountCache.GetCodeChallenge(userId, SocialPlatformsNames.Twitter);
 
@@ -105,14 +108,14 @@ public class SocialAccountService : ISocialAccountService
         await _socialAccountProducer.SendAccountConnected(producerDto);
     }
 
-    private async Task<long> GetUserIdByState(string state, string platform)
+    public async Task<StateResponseDto> GetStateResponse(string state, string platform)
     {
-        var userIdByState = await _oauthStateService.GetUserIdByStateStoraged(platform, state);
+        var stateDto = await _oauthStateService.GetStateStoraged(platform, state);
 
-        if (userIdByState is null)
+        if (stateDto is null)
             throw new UnauthorizedException("Invalid state from query");
         
-        return (long)userIdByState;
+        return stateDto;
     }
 
     private SocialAccount CreateSocialAccount(ExternalServicesTokensDto tokensDto,

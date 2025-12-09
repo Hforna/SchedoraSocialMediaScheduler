@@ -29,9 +29,16 @@ public class SocialAccountsController : ControllerBase
         _logger = logger;
         _linkGenerator = linkGenerator;
     }
-
+    
+    /// <summary>
+    /// Returns a uri to twitter oauth authorization requesting user permissions for app access on behalf
+    /// </summary>
+    /// <param name="platform">the platform to connect the social account, meanwhile linkedin or twitter</param>
+    /// <param name="redirectUrl">redirect url after the user authorize the platform access</param>
+    /// <returns>returns the url to platform oauth authorization page</returns>
     [HttpGet("connect/{platform}")]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> ConnectPlatform([FromRoute]string platform, [FromQuery]string redirectUrl, 
         [FromServices]IEnumerable<IExternalOAuthAuthenticationService> externalAuthenticationService)
     {
@@ -41,11 +48,16 @@ public class SocialAccountsController : ControllerBase
         if (service is null)
             throw new RequestException("Invalid platform name");
         
-        var result = await service.GetOAuthRedirectUrl(redirectUrl.Trim());
+        var baseUri = HttpContext.GetBaseUri();
+        var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, "LinkedInCallback");
+        var callbackUrl = $"{HttpContext.GetBaseUri()}{callbackEndpoint![1..]}";
+        
+        var result = await service.GetOAuthRedirectUrl(redirectUrl, callbackUrl);
 
         return Ok(result);
     }
-
+    
+    
     [HttpGet("linkedin/callback")]
     [EndpointName("LinkedInCallback")]
     public async Task<IActionResult> LinkedInCallback([FromQuery]string state, [FromQuery]string code,
@@ -62,8 +74,10 @@ public class SocialAccountsController : ControllerBase
         var tokensResult = await externalService!.RequestTokensFromOAuthPlatform(code, redirectUri);
         
         await _socialAccountService.ConfigureOAuthTokensFromLinkedin(tokensResult, state);
+        
+        var stateResponse = await _socialAccountService.GetStateResponse(code, state);
 
-        return Ok();
+        return Ok(stateResponse.RedirectUrl);
     }
     
     [HttpGet("twitter/callback")]
@@ -77,6 +91,8 @@ public class SocialAccountsController : ControllerBase
 
         await _socialAccountService.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUri);
         
-        return Ok();
+        var stateResponse = await _socialAccountService.GetStateResponse(code, state);
+        
+        return Ok(stateResponse.RedirectUrl);
     }
 }

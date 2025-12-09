@@ -1,3 +1,4 @@
+using Schedora.Domain.Dtos;
 using Schedora.Domain.Services;
 using Schedora.Domain.Services.Cache;
 
@@ -12,12 +13,12 @@ public class OAuthStateService : IOAuthStateService
         _socialAccountCache = socialAccountCache;
     }
 
-    public async Task StorageState(string state, long userId, string platform)
+    public async Task StorageState(string state, long userId, string platform, string redirectUrl)
     {
-        await _socialAccountCache.AddStateAuthorization(state, userId, platform);
+        await _socialAccountCache.AddStateAuthorization(state, userId, platform, redirectUrl);
     }
 
-    public async Task<long?> GetUserIdByStateStoraged(string platform, string state)
+    public async Task<StateResponseDto?> GetStateStoraged(string platform, string state)
     {
         return await _socialAccountCache.GetUserIdByStateAuthorization(platform, state);
     }
