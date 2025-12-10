@@ -1,0 +1,29 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+schedules:
+  - cron: 00, 1, *, *, *
+    displayName: onePm
+    branches:
+      include:
+        - master
+
+trigger:
+  - master
+
+jobs:
+  - job: job1
+    displayName: job1
+    condition: failed("job2")
+    pool: macschedora
+    steps:
+    - bash: echo "First job"
+    
+  - job: job2
+    displayName: job2
+    pool: macschedora
+    steps:
+      - bash: echo "Second job""
+  
