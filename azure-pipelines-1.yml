@@ -1,0 +1,50 @@
+trigger:
+  - master
+
+
+stages:
+- stage: start
+  displayName: start
+  jobs:
+    - job: jobStart
+      displayName: start
+      pool: macschedora
+      steps:
+        - bash: echo "Start docker image build"
+- stage: build
+  dependsOn: start
+  jobs:
+    - job: buildJob
+      pool: macschedora
+      displayName: buildJob
+      steps:
+        - task: Docker@2
+          displayName: buildDocker
+          inputs:
+            command: build
+            dockerfile: src/backend/Schedora.WebApi/Dockerfile
+            buildContext: '$(Build.SourcesDirectory)'
+            tags: |
+              $(tag)
+- stage: tests
+  dependsOn: build
+  displayName: tests
+  jobs:
+    - job: unitTests
+      displayName: unit-tests
+      pool: macschedora
+      steps:
+        - task: UseDotNet@2
+          displayName: 'Install .NET SDK'
+          inputs:
+            packageType: 'sdk'
+            version: '8.0.x'
+        - script: dotnet restore src/backend/tests/Schedora.UnitTests/Schedora.UnitTests.csproj
+          displayName: Restore dependencies
+
+        - task: DotNetCoreCLI@2
+          displayName: 'Run Unit Tests'
+          inputs:
+            command: 'test'
+            projects: 'src/backend/tests/Schedora.UnitTests/Schedora.UnitTests.csproj'
+            arguments: '--logger trx --verbosity detailed'

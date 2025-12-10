@@ -2,6 +2,13 @@
 # Build a Docker image
 # https://docs.microsoft.com/azure/devops/pipelines/languages/docker
 
+schedules:
+  - cron: 28 23 * * *
+    displayName: byNow
+    branches:
+      include:
+        - master
+
 trigger:
 - master
 
