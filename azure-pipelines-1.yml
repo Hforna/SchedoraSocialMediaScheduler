@@ -34,6 +34,11 @@ stages:
       displayName: unit-tests
       pool: macschedora
       steps:
+        - task: UseDotNet@2
+          displayName: 'Install .NET SDK'
+          inputs:
+            packageType: 'sdk'
+            version: '8.0.x'
         - task: DotNetCoreCLI@2
           inputs:
             command: 'test'
