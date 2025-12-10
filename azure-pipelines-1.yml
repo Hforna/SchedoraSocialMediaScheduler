@@ -17,7 +17,7 @@ jobs:
   - job: job1
     displayName: job1
     dependsOn: job2
-    condition: failed()
+    condition: succeeded()
     pool: macschedora
     steps:
     - bash: echo "First job"
