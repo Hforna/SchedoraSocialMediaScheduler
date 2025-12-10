@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 schedules:
-  - cron: 00, 1, *, *, *
+  - cron: 00 1 * * *
     displayName: onePm
     branches:
       include:
@@ -16,7 +16,8 @@ trigger:
 jobs:
   - job: job1
     displayName: job1
-    condition: failed("job2")
+    dependsOn: job2
+    condition: failed()
     pool: macschedora
     steps:
     - bash: echo "First job"
