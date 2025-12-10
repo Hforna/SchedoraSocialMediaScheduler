@@ -26,3 +26,15 @@ stages:
             buildContext: '$(Build.SourcesDirectory)'
             tags: |
               $(tag)
+- stage: tests
+  dependsOn: build
+  displayName: tests
+  jobs:
+    - job: unitTests
+      displayName: unit-tests
+      pool: macschedora
+      steps:
+        - task: DotNetCoreCLI@2
+          inputs:
+            command: test
+            projects: 'src/backend/tests/Schedora.UnitTests/Schedora.UnitTests.csproj'
