@@ -22,7 +22,7 @@ stages:
           displayName: buildDocker
           inputs:
             command: build
-            dockerfile: src/backend/Schedora/WebApi/Dockerfile
+            dockerfile: src/backend/Schedora.WebApi/Dockerfile
             buildContext: '$(Build.SourcesDirectory)'
             tags: |
               $(tag)
