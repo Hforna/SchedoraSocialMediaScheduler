@@ -36,5 +36,5 @@ stages:
       steps:
         - task: DotNetCoreCLI@2
           inputs:
-            command: test
+            command: 'test'
             projects: 'src/backend/tests/Schedora.UnitTests/Schedora.UnitTests.csproj'
