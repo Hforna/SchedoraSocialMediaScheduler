@@ -10,7 +10,7 @@ stages:
       displayName: start
       pool: macschedora
       steps:
-        - bash: echo "Start docker image build"
+        - bash: echo $(startBuild)
 - stage: build
   dependsOn: start
   jobs:
