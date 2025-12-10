@@ -15,6 +15,7 @@ stages:
   dependsOn: start
   jobs:
     - job: buildJob
+      pool: macschedora
       displayName: buildJob
       steps:
         - task: Docker@2
