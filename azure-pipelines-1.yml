@@ -34,14 +34,6 @@ stages:
       displayName: unit-tests
       pool: macschedora
       steps:
-        - task: UseDotNet@2
-          displayName: 'Install .NET SDK'
-          inputs:
-            packageType: 'sdk'
-            version: '8.0.x'
-        - script: dotnet restore src/backend/tests/Schedora.UnitTests/Schedora.UnitTests.csproj
-          displayName: Restore dependencies
-
         - task: DotNetCoreCLI@2
           displayName: 'Run Unit Tests'
           inputs:
