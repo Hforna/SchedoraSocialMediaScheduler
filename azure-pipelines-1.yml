@@ -26,5 +26,5 @@ jobs:
     displayName: job2
     pool: macschedora
     steps:
-      - bash: echo "Second job""
+      - bash: echo "Second job"
   
