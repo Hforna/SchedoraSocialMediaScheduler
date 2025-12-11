@@ -26,6 +26,7 @@ public class DataContext : IdentityDbContext<User, Role, long>
     public DbSet<ActivityLog> ActivityLogs { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<NotificationPreference> NotificationPreferences { get; set; }
+    public DbSet<Subscription>  Subscriptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

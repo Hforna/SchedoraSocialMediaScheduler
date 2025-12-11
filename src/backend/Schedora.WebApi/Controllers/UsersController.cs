@@ -24,6 +24,14 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPatch("address")]
+    public async Task<IActionResult> UpdateAddress([FromBody]UpdateAddressRequest request)
+    {
+        var result = await _userService.UpdateAddress(request);
+        
+        return Ok(result);
+    }
+
     [HttpPut]
     public async Task<IActionResult> UpdateUserInfos([FromBody]UpdateUserRequest request)
     {

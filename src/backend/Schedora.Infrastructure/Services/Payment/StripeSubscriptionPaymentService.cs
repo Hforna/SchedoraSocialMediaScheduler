@@ -11,15 +11,17 @@ namespace Schedora.Infrastructure.Services.Payment;
 public class StripeSubscriptionPaymentService : ISubscriptionPaymentService
 {
     private readonly ILogger<StripeSubscriptionPaymentService> _logger;
+    private readonly IGatewayPricesService _pricesService;
 
-    public StripeSubscriptionPaymentService(ILogger<StripeSubscriptionPaymentService> logger)
+    public StripeSubscriptionPaymentService(ILogger<StripeSubscriptionPaymentService> logger, IGatewayPricesService pricesService)
     {
         _logger = logger;
+        _pricesService = pricesService;
     }
     
     public async Task<string> CreateCheckoutSession(string customerGatewayId, SubscriptionEnum subscription, string successUrl, string cancelUrl)
     {
-        var price = StripeSubscriptionPrices.ConvertSubscriptionEnumToPrice(subscription);
+        var price = _pricesService.ConvertSubscriptionEnumToPrice(subscription);
 
         try
         {

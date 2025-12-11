@@ -8,6 +8,7 @@ public interface IUserService
     public Task UpdatePassword(UpdatePasswordRequest request);
     public Task<UserResponse> UpdateUserInfos(UpdateUserRequest request);
     public Task<string> GetUserSubscription();
+    public Task<AddressResponse> UpdateAddress(UpdateAddressRequest request);
 }
 
 public class UserService : IUserService
@@ -68,5 +69,20 @@ public class UserService : IUserService
         var user = await _tokenService.GetUserByToken();
 
         return user!.SubscriptionTier.ToString();
+    }
+
+    public async Task<AddressResponse> UpdateAddress(UpdateAddressRequest request)
+    {
+        var user = await _tokenService.GetUserByToken();
+            
+        if(user.Address is null)
+            user.Address = new Address();
+        
+        _mapper.Map(request, user.Address);
+        
+        _uow.GenericRepository.Update<User>(user);
+        await _uow.Commit();
+        
+        return _mapper.Map<AddressResponse>(user.Address);
     }
 }
