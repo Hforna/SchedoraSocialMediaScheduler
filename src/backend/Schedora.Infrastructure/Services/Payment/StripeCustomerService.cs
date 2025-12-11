@@ -7,7 +7,8 @@ namespace Schedora.Infrastructure.Services.Payment;
 
 public class StripeCustomerService : ICustomerPaymentService
 {
-    public async Task<string> CreateCustomer(string fullName, string email, string phoneNumber, UserAddressDto userAddress)
+
+    public async Task<string> CreateCustomer(long userId, string fullName, string email, string? phoneNumber, UserAddressDto userAddress)
     {
         var options = new CustomerCreateOptions()
         {
@@ -22,8 +23,10 @@ public class StripeCustomerService : ICustomerPaymentService
             },
             Email = email,
             Name =  fullName,
-            Phone =  phoneNumber
+            Metadata = new Dictionary<string, string> { { "user_id", userId.ToString() } }
         };
+        if(!string.IsNullOrEmpty(phoneNumber))
+            options.Phone = phoneNumber;
 
         var service = new CustomerService();
         var customer = await service.CreateAsync(options);

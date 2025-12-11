@@ -88,7 +88,7 @@ public static class ServicesConfiguration
         StripeConfiguration.ApiKey = configuration.GetValue<string>("services:payment:stripe:apiKey");
         
         services.AddScoped<ICustomerPaymentService, StripeCustomerService>();
-        services.AddScoped<ISubscriptionService, StripeSubscriptionService>();
+        services.AddScoped<ISubscriptionPaymentService, StripeSubscriptionPaymentService>();
     }
     
     static void AddRedis(IServiceCollection services, IConfiguration configuration)

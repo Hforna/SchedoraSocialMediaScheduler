@@ -11,6 +11,11 @@ public class UserRepository : BaseRepository, IUserRepository
     {
     }
 
+    public async Task<User?> GetUserByCustomerGatewayId(string customerGatewayId)
+    {
+        return await _context.Users.SingleOrDefaultAsync(d => d.GatewayCustomerId == customerGatewayId && d.IsActive);
+    }
+
     public async Task<User?> UserByEmailNotConfirmed(string email)
     {
         return await _context.Users

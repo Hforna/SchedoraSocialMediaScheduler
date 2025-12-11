@@ -4,5 +4,5 @@ namespace Schedora.Domain.Services;
 
 public interface ICustomerPaymentService
 {
-    public Task<string> CreateCustomer(string fullName, string email, string phoneNumber, UserAddressDto userAddress);
+    public Task<string> CreateCustomer(long userId, string fullName, string email, string? phoneNumber, UserAddressDto userAddress);
 }
