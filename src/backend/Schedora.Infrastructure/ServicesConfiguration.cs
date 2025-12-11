@@ -22,8 +22,11 @@ using Schedora.Infrastructure.Services;
 using Schedora.Infrastructure.Services.Cache;
 using Schedora.Infrastructure.Services.Cookies;
 using Schedora.Infrastructure.Services.ExternalServicesConfigs;
+using Schedora.Infrastructure.Services.Payment;
 using Schedora.Infrastructure.Services.Sessions;
 using StackExchange.Redis;
+using Stripe;
+using TokenService = Schedora.Infrastructure.Services.TokenService;
 
 namespace Schedora.Infrastructure;
 
@@ -81,6 +84,11 @@ public static class ServicesConfiguration
         services.AddSingleton<ITwitterOAuthConfiguration, TwitterOAuthConfiguration>();
         services.AddSingleton<ILinkedInOAuthConfiguration, LinkedInOAuthConfiguration>();
         services.AddSingleton<ITwitterConfiguration, TwitterConfiguration>();
+
+        StripeConfiguration.ApiKey = configuration.GetValue<string>("services:payment:stripe:apiKey");
+        
+        services.AddScoped<ICustomerPaymentService, StripeCustomerService>();
+        services.AddScoped<ISubscriptionService, StripeSubscriptionService>();
     }
     
     static void AddRedis(IServiceCollection services, IConfiguration configuration)
