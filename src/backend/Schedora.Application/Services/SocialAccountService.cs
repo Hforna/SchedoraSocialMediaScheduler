@@ -1,3 +1,4 @@
+using Schedora.Domain.DomainServices;
 using Schedora.Domain.Dtos;
 using Schedora.Domain.RabbitMq.Producers;
 using Schedora.Domain.Services.Cache;
@@ -10,6 +11,7 @@ public interface ISocialAccountService
     public Task ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state);
     public Task ConfigureOAuthTokensFromOAuthTwitter(string state, string code, string redirectUrl);
     public Task<StateResponseDto> GetStateResponse(string state, string platform);
+    public Task<bool> UserCanConnectSocialAccount(string platform);
 }
 
 public class SocialAccountService : ISocialAccountService
@@ -19,12 +21,13 @@ public class SocialAccountService : ISocialAccountService
         ILinkedInService linkedInService, ISocialAccountProducer socialAccountProducer, 
         IOAuthStateService oauthStateService, IEnumerable<IExternalOAuthAuthenticationService>  externalOAuthAuthenticationService, 
         IUserSession userSession, ITwitterService twitterService, ICookiesService cookies, 
-        ISocialAccountCache socialAccountCache, ITokensCryptographyService tokensCryptography)
+        ISocialAccountCache socialAccountCache, ITokensCryptographyService tokensCryptography, ISocialAccountDomainService  socialAccountDomainService)
     {
         _logger = logger;
         _cookiesService = cookies;
         _userSession = userSession;
         _socialAccountCache = socialAccountCache;
+        _socialAccountDomainService = socialAccountDomainService;
         _externalOAuthAuthenticationService = externalOAuthAuthenticationService;
         _oauthStateService = oauthStateService;
         _tokenService = tokenService;
@@ -49,6 +52,7 @@ public class SocialAccountService : ISocialAccountService
     private readonly ISocialAccountProducer _socialAccountProducer;
     private readonly IOAuthStateService _oauthStateService;
     private readonly ITokensCryptographyService  _tokensCryptography;
+    private readonly ISocialAccountDomainService  _socialAccountDomainService;
     
     public async Task ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state)
     {
@@ -116,6 +120,17 @@ public class SocialAccountService : ISocialAccountService
             throw new UnauthorizedException("Invalid state from query");
         
         return stateDto;
+    }
+
+    public async Task<bool> UserCanConnectSocialAccount(string platform)
+    {
+        platform = SocialPlatformsNames.NormalizePlatform(platform);
+        
+        var user = await _tokenService.GetUserByToken();
+        
+        var userCanConnect = await _socialAccountDomainService.UserAbleToConnectAccount(user, user.SubscriptionTier, platform);
+        
+        return userCanConnect;
     }
 
     private SocialAccount CreateSocialAccount(ExternalServicesTokensDto tokensDto,

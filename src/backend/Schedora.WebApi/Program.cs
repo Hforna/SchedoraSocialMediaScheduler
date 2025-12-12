@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Schedora.Application;
+using Schedora.Domain;
 using Schedora.Infrastructure;
 using Schedora.Infrastructure.Externals.Services;
 using Schedora.Infrastructure.RabbitMq;
@@ -74,6 +75,7 @@ builder.Services.AddRouting(d => d.LowercaseUrls = true);
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication(builder.Configuration);
+builder.Services.AddDomain(builder.Configuration);
 
 var tokenValidationParameters = new TokenValidationParameters()
 {

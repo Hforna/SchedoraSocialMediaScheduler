@@ -49,6 +49,14 @@ public static class SocialPlatformsNames
     public const string Twitter = "Twitter";
     public const string LinkedIn = "LinkedIn";
 
+    public static string NormalizePlatform(string platform)
+    {
+        platform =  GetAllConsts().FirstOrDefault(d => d.Equals(platform, StringComparison.OrdinalIgnoreCase)) 
+                    ?? throw new RequestException("Invalid social platform name");
+        
+        return platform;
+    }
+
     public static List<string> GetAllConsts()
     {
         var values = typeof(SocialPlatformsNames)

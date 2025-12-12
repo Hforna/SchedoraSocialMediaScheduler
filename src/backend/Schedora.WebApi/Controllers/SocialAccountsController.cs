@@ -42,6 +42,8 @@ public class SocialAccountsController : ControllerBase
     public async Task<IActionResult> ConnectPlatform([FromRoute]string platform, [FromQuery]string redirectUrl, 
         [FromServices]IEnumerable<IExternalOAuthAuthenticationService> externalAuthenticationService)
     {
+        await _socialAccountService.UserCanConnectSocialAccount(platform);
+        
         var service = externalAuthenticationService.
             FirstOrDefault(d => d.Platform.Equals(platform, StringComparison.InvariantCultureIgnoreCase));
 
