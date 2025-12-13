@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Schedora.Application.Services;
+using Schedora.Domain.DomainServices;
 using Schedora.Domain.Dtos;
 using Schedora.Domain.Entities;
 using Schedora.Domain.Exceptions;
@@ -32,8 +33,9 @@ public class SocialAccountServiceTests
     private Mock<ITwitterService> _twitterService;
     private Mock<ICookiesService> _cookiesService;
     private Mock<ITokensCryptographyService> _tokensCryptography;
+    private Mock<ISocialAccountDomainService> _socialAccountDomainService;
     private Mock<IUserSession> _userSession;
-    private Mock<IEnumerable<IExternalOAuthAuthenticationService>> _externalOAuthAuthenticationServices;
+    private IEnumerable<IExternalOAuthAuthenticationService> _externalOAuthAuthenticationServices;
 
     public SocialAccountServiceTests()
     {
@@ -45,11 +47,12 @@ public class SocialAccountServiceTests
         _socialAccountProducer = new Mock<ISocialAccountProducer>();
         _accountCache = new Mock<ISocialAccountCache>();
         _userSession = new Mock<IUserSession>();
-        _externalOAuthAuthenticationServices = new Mock<IEnumerable<IExternalOAuthAuthenticationService>>();
+        _externalOAuthAuthenticationServices = new List<IExternalOAuthAuthenticationService>();
         _oauthStateService = new Mock<IOAuthStateService>();
         _twitterService = new Mock<ITwitterService>();
         _cookiesService = new Mock<ICookiesService>();
         _tokensCryptography = new Mock<ITokensCryptographyService>();
+        _socialAccountDomainService = new Mock<ISocialAccountDomainService>();
 
         _service = new SocialAccountService(
             _logger.Object,
@@ -59,15 +62,17 @@ public class SocialAccountServiceTests
             _linkedInService.Object,
             _socialAccountProducer.Object,
             _oauthStateService.Object,
-            _externalOAuthAuthenticationServices.Object,
+            _externalOAuthAuthenticationServices,
             _userSession.Object,
             _twitterService.Object,
             _cookiesService.Object,
             _accountCache.Object,
-            _tokensCryptography.Object
+            _tokensCryptography.Object,
+            _socialAccountDomainService.Object
         );
     }
 
+    #region ConfigureOAuthTokensFromLinkedIn
     [Fact]
     public async Task ConfigureOAuthLinkedIn_StateIsNull_ThrowsUnauthorizedException()
     {
@@ -177,4 +182,30 @@ public class SocialAccountServiceTests
         capturedAccount.UserId.Should().Be(userId);
         capturedAccount.Platform.Should().Be(SocialPlatformsNames.LinkedIn);
     }
+    #endregion
+
+    #region ConfigureOAuthTokensFromTwitter
+    [Theory]
+    [InlineData(" ")]
+    [InlineData("invalid token")]
+    public async Task ConfigureOAuthTokensFromTwitter_NullOrInvalidState_ShouldThrowUnauthrorizedException(string state)
+    {
+        var redirectUrl = "https://google.com";
+        var code = "random code";
+
+        var externalOauthService = ExternalSocialAccountMock.GenerateMock();
+        externalOauthService.Setup(d => d.Platform).Returns(SocialPlatformsNames.Twitter);
+
+        _externalOAuthAuthenticationServices = new List<IExternalOAuthAuthenticationService>
+        {
+            externalOauthService.Object
+        };
+        
+        var result = async () => await _service.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUrl);
+        
+        await result.Should().ThrowAsync<UnauthorizedException>("Invalid state from query");
+        _oauthStateService.Verify(d => d.GetStateStoraged(SocialPlatformsNames.Twitter, state));
+    }
+    #endregion
+
 }

@@ -3,6 +3,7 @@ using Schedora.Domain.Dtos;
 using Schedora.Domain.RabbitMq.Producers;
 using Schedora.Domain.Services.Cache;
 using Schedora.Domain.Services.Session;
+using SocialScheduler.Domain.Constants;
 
 namespace Schedora.Application.Services;
 
@@ -40,6 +41,7 @@ public class SocialAccountService : ISocialAccountService
     }
 
     private readonly ILogger<ISocialAccountService> _logger;
+    private readonly IActivityLogService _activityLogService;
     private readonly ICookiesService _cookiesService;
     private readonly ISocialAccountCache  _socialAccountCache;
     private readonly IUserSession _userSession;
@@ -107,6 +109,14 @@ public class SocialAccountService : ISocialAccountService
         
         await _uow.GenericRepository.Add<SocialAccount>(socialAccount);
         await _uow.Commit();
+        
+        await _activityLogService.LogAsync(userId,
+            ActivityActions.SOCIAL_ACCOUNT_CONNECTED,
+            nameof(SocialAccount),
+            socialAccount.Id, new
+            {
+                Platform = $"{socialAccount.Platform}"
+            }, true);
         
         var producerDto = new SocialAccountConnectedDto(socialAccount.Id, userId);
         await _socialAccountProducer.SendAccountConnected(producerDto);
