@@ -22,10 +22,12 @@ public class SocialAccountService : ISocialAccountService
         ILinkedInService linkedInService, ISocialAccountProducer socialAccountProducer, 
         IOAuthStateService oauthStateService, IEnumerable<IExternalOAuthAuthenticationService>  externalOAuthAuthenticationService, 
         IUserSession userSession, ITwitterService twitterService, ICookiesService cookies, 
-        ISocialAccountCache socialAccountCache, ITokensCryptographyService tokensCryptography, ISocialAccountDomainService  socialAccountDomainService)
+        ISocialAccountCache socialAccountCache, ITokensCryptographyService tokensCryptography, 
+        ISocialAccountDomainService  socialAccountDomainService, IActivityLogService activityLogService)
     {
         _logger = logger;
         _cookiesService = cookies;
+        _activityLogService = activityLogService;
         _userSession = userSession;
         _socialAccountCache = socialAccountCache;
         _socialAccountDomainService = socialAccountDomainService;
@@ -85,13 +87,20 @@ public class SocialAccountService : ISocialAccountService
         var oauthService =  _externalOAuthAuthenticationService
             .FirstOrDefault(d => d.Platform.Equals(SocialPlatformsNames.Twitter));
 
+        if (oauthService is null)
+        {
+            _logger.LogError($"Oauth service {nameof(oauthService)} not found");
+            
+            throw new InternalServiceException($"Oauth service {nameof(oauthService)} not found");
+        }
+
         var stateResponse = await GetStateResponse(state, SocialPlatformsNames.Twitter);
         var userId = stateResponse.UserId;
         
         var codeChallenge = await _socialAccountCache.GetCodeChallenge(userId, SocialPlatformsNames.Twitter);
 
         if (string.IsNullOrEmpty(codeChallenge))
-            throw new InternalServiceException("Code challenge is null");
+            throw new UnauthorizedException("Code challenge is null");
         
         var tokensDto = await oauthService.RequestTokensFromOAuthPlatform(code, redirectUrl, codeChallenge);
         

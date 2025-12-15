@@ -35,7 +35,9 @@ public class SocialAccountServiceTests
     private Mock<ITokensCryptographyService> _tokensCryptography;
     private Mock<ISocialAccountDomainService> _socialAccountDomainService;
     private Mock<IUserSession> _userSession;
-    private IEnumerable<IExternalOAuthAuthenticationService> _externalOAuthAuthenticationServices;
+    private List<IExternalOAuthAuthenticationService> _externalOAuthAuthenticationServices;
+    private Mock<IExternalOAuthAuthenticationService> _externalOAuthAuthenticationService;
+    private Mock<IActivityLogService> _activityLogService;
 
     public SocialAccountServiceTests()
     {
@@ -47,12 +49,15 @@ public class SocialAccountServiceTests
         _socialAccountProducer = new Mock<ISocialAccountProducer>();
         _accountCache = new Mock<ISocialAccountCache>();
         _userSession = new Mock<IUserSession>();
-        _externalOAuthAuthenticationServices = new List<IExternalOAuthAuthenticationService>();
         _oauthStateService = new Mock<IOAuthStateService>();
         _twitterService = new Mock<ITwitterService>();
         _cookiesService = new Mock<ICookiesService>();
         _tokensCryptography = new Mock<ITokensCryptographyService>();
         _socialAccountDomainService = new Mock<ISocialAccountDomainService>();
+        _externalOAuthAuthenticationService = new Mock<IExternalOAuthAuthenticationService>();
+        _activityLogService = new Mock<IActivityLogService>();
+        
+        _externalOAuthAuthenticationServices = new List<IExternalOAuthAuthenticationService>() { _externalOAuthAuthenticationService.Object };
 
         _service = new SocialAccountService(
             _logger.Object,
@@ -68,7 +73,8 @@ public class SocialAccountServiceTests
             _cookiesService.Object,
             _accountCache.Object,
             _tokensCryptography.Object,
-            _socialAccountDomainService.Object
+            _socialAccountDomainService.Object,
+            _activityLogService.Object
         );
     }
 
@@ -192,20 +198,207 @@ public class SocialAccountServiceTests
     {
         var redirectUrl = "https://google.com";
         var code = "random code";
-
-        var externalOauthService = ExternalSocialAccountMock.GenerateMock();
-        externalOauthService.Setup(d => d.Platform).Returns(SocialPlatformsNames.Twitter);
-
-        _externalOAuthAuthenticationServices = new List<IExternalOAuthAuthenticationService>
-        {
-            externalOauthService.Object
-        };
+        
+        _externalOAuthAuthenticationService.Setup(d => d.Platform).Returns(SocialPlatformsNames.Twitter);
         
         var result = async () => await _service.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUrl);
         
         await result.Should().ThrowAsync<UnauthorizedException>("Invalid state from query");
         _oauthStateService.Verify(d => d.GetStateStoraged(SocialPlatformsNames.Twitter, state));
     }
-    #endregion
 
+    [Fact]
+    public async Task ConfigureOAuthTokensFromTwitter_NullOAuthService_ShouldThrowInternalServiceException()
+    {
+        var redirectUrl = "https://google.com";
+        var code = "invalid code";
+        var state = "invalid state";
+        
+        _externalOAuthAuthenticationService
+            .Setup(d => d.Platform)
+            .Returns("SomeOtherPlatform");
+        
+        var result = async () => await _service.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUrl);
+
+        await result.Should().ThrowAsync<InternalServiceException>($"Oauth service {SocialPlatformsNames.Twitter} not found");
+        
+        _logger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => true),
+                It.IsAny<Exception>(),
+                It.Is<Func<It.IsAnyType, Exception, string>>((v, t) => true)
+            ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task ConfigureOAuthTokensFromTwitter_InvalidCodeChallenge_ShouldThrowUnauthorizedException()
+    {
+        var redirectUrl = "https://google.com";
+        var code = "invalid code";
+        var state = "valid state";
+        var userId = 1;
+
+        var stateResponse = new StateResponseDto()
+        {
+            RedirectUrl = redirectUrl,
+            UserId = userId
+        };
+        
+        _externalOAuthAuthenticationService.Setup(d => d.Platform).Returns(SocialPlatformsNames.Twitter);
+
+        _oauthStateService.Setup(d => d.GetStateStoraged(SocialPlatformsNames.Twitter, state))
+            .ReturnsAsync(stateResponse);
+        
+        var result = async () => await _service.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUrl);
+        
+        await result.Should().ThrowAsync<UnauthorizedException>("Invalid code challenge");
+
+        _accountCache.Verify(d => d.GetCodeChallenge(userId, SocialPlatformsNames.Twitter));
+    }
+    
+    [Fact]
+    public async Task ConfigureOAuthTokensFromTwitter_ExternalServiceThrowsException_ShouldPropagateException()
+    {
+        var redirectUrl = "https://google.com";
+        var code = "valid code";
+        var state = "valid state";
+        var userId = 1;
+
+        _externalOAuthAuthenticationService.Setup(d => d.Platform).Returns(SocialPlatformsNames.Twitter);
+
+        _oauthStateService.Setup(d => d.GetStateStoraged(SocialPlatformsNames.Twitter, state))
+            .ReturnsAsync(new StateResponseDto { RedirectUrl = redirectUrl, UserId = userId });
+
+        _accountCache.Setup(d => d.GetCodeChallenge(userId, SocialPlatformsNames.Twitter))
+            .ReturnsAsync("challenge");
+
+        _externalOAuthAuthenticationService
+            .Setup(d => d.RequestTokensFromOAuthPlatform(code, redirectUrl, It.IsAny<string>()))
+            .ThrowsAsync(new ExternalServiceException("twitter error"));
+
+        var result = async () => await _service.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUrl);
+
+        await result.Should().ThrowAsync<ExternalServiceException>("twitter error");
+    }
+
+    [Fact]
+    public async Task ConfigureOAuthTokensFromTwitter_SocialAccountAlreadyLinked_ShouldThrowUnauthorizedException()
+    {
+        var redirectUrl = "https://google.com";
+        var code = "valid code";
+        var state = "valid state";
+        var userId = 1;
+
+        var tokensDto = ExternalServicesTokensDtoFaker.Generate();
+        var socialInfos = SocialAccountInfosDtoFaker.Generate();
+
+        _externalOAuthAuthenticationService.Setup(d => d.Platform).Returns(SocialPlatformsNames.Twitter);
+
+        _oauthStateService.Setup(d => d.GetStateStoraged(SocialPlatformsNames.Twitter, state))
+            .ReturnsAsync(new StateResponseDto { RedirectUrl = redirectUrl, UserId = userId });
+
+        _accountCache.Setup(d => d.GetCodeChallenge(userId, SocialPlatformsNames.Twitter))
+            .ReturnsAsync("challenge");
+
+        _externalOAuthAuthenticationService
+            .Setup(d => d.RequestTokensFromOAuthPlatform(code, redirectUrl, It.IsAny<string>()))
+            .ReturnsAsync(tokensDto);
+
+        _twitterService
+            .Setup(d => d.GetUserSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType))
+            .ReturnsAsync(socialInfos);
+
+        _uow.Setup(d =>
+                d.SocialAccountRepository.SocialAccountLinkedToUserExists(userId, socialInfos.UserId, SocialPlatformsNames.Twitter))
+            .ReturnsAsync(true);
+
+        var result = async () => await _service.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUrl);
+
+        await result.Should().ThrowAsync<UnauthorizedException>("This account is already linked to this user");
+    }
+
+    [Fact]
+    public async Task ConfigureOAuthTokensFromTwitter_ValidTokens_ShouldCreateSocialAccountSuccessfully()
+    {
+        var redirectUrl = "https://google.com";
+        var code = "valid code";
+        var state = "valid state";
+        var userId = 1;
+
+        var tokensDto = ExternalServicesTokensDtoFaker.Generate();
+        var socialInfos = SocialAccountInfosDtoFaker.Generate();
+
+        _externalOAuthAuthenticationService.Setup(d => d.Platform).Returns(SocialPlatformsNames.Twitter);
+
+        _oauthStateService.Setup(d => d.GetStateStoraged(SocialPlatformsNames.Twitter, state))
+            .ReturnsAsync(new StateResponseDto { RedirectUrl = redirectUrl, UserId = userId });
+
+        _accountCache.Setup(d => d.GetCodeChallenge(userId, SocialPlatformsNames.Twitter))
+            .ReturnsAsync("challenge");
+
+        _externalOAuthAuthenticationService
+            .Setup(d => d.RequestTokensFromOAuthPlatform(code, redirectUrl, It.IsAny<string>()))
+            .ReturnsAsync(tokensDto);
+
+        _twitterService
+            .Setup(d => d.GetUserSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType))
+            .ReturnsAsync(socialInfos);
+
+        _uow.Setup(d =>
+                d.SocialAccountRepository.SocialAccountLinkedToUserExists(userId, socialInfos.UserId, SocialPlatformsNames.Twitter))
+            .ReturnsAsync(false);
+
+        await _service.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUrl);
+
+        _uow.Verify(d => d.Commit(), Times.Once);
+        _socialAccountProducer.Verify(d => d.SendAccountConnected(It.IsAny<SocialAccountConnectedDto>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ConfigureOAuthTokensFromTwitter_ValidTokens_ShouldCreateSocialAccountWithCorrectData()
+    {
+        var redirectUrl = "https://google.com";
+        var code = "valid code";
+        var state = "valid state";
+        var userId = 1;
+
+        var tokensDto = ExternalServicesTokensDtoFaker.Generate();
+        var socialInfos = SocialAccountInfosDtoFaker.Generate();
+
+        SocialAccount capturedAccount = null;
+
+        _externalOAuthAuthenticationService.Setup(d => d.Platform).Returns(SocialPlatformsNames.Twitter);
+
+        _oauthStateService.Setup(d => d.GetStateStoraged(SocialPlatformsNames.Twitter, state))
+            .ReturnsAsync(new StateResponseDto { RedirectUrl = redirectUrl, UserId = userId });
+
+        _accountCache.Setup(d => d.GetCodeChallenge(userId, SocialPlatformsNames.Twitter))
+            .ReturnsAsync("challenge");
+
+        _externalOAuthAuthenticationService
+            .Setup(d => d.RequestTokensFromOAuthPlatform(code, redirectUrl, It.IsAny<string>()))
+            .ReturnsAsync(tokensDto);
+
+        _twitterService
+            .Setup(d => d.GetUserSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType))
+            .ReturnsAsync(socialInfos);
+
+        _uow.Setup(d =>
+                d.SocialAccountRepository.SocialAccountLinkedToUserExists(It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(false);
+
+        _uow.Setup(d => d.GenericRepository.Add<SocialAccount>(It.IsAny<SocialAccount>()))
+            .Callback<SocialAccount>(account => capturedAccount = account);
+
+        await _service.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUrl);
+
+        capturedAccount.Should().NotBeNull();
+        capturedAccount.UserId.Should().Be(userId);
+        capturedAccount.Platform.Should().Be(SocialPlatformsNames.Twitter);
+    }
+    #endregion
 }
