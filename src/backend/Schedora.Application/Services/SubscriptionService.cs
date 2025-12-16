@@ -1,20 +1,23 @@
 using Schedora.Domain.Dtos;
+using SocialScheduler.Domain.Constants;
 
 namespace Schedora.Application.Services;
 
 public interface ISubscriptionService
 {
     public Task<string> CreateSubscriptionCheckout(CreateSubscriptionCheckoutRequest request);
+    public Task<SubscriptionPlansResponse> GetSubscriptionPlans();
 }
 
 public class SubscriptionService : ISubscriptionService
 {
     public SubscriptionService(ILogger<SubscriptionService> logger, ISubscriptionPaymentService subscriptionPaymentService, 
-        ICustomerPaymentService customerPaymentService, ITokenService tokenService, IMapper mapper)
+        ICustomerPaymentService customerPaymentService, ITokenService tokenService, IMapper mapper, IGatewayPricesService  gatewayPrices)
     {
         _logger = logger;
         _subscriptionPaymentService = subscriptionPaymentService;
         _customerPaymentService = customerPaymentService;
+        _gatewayPrices = gatewayPrices;
         _tokenService = tokenService;
         _mapper = mapper;
     }
@@ -24,6 +27,7 @@ public class SubscriptionService : ISubscriptionService
     private readonly ICustomerPaymentService  _customerPaymentService;
     private readonly ITokenService _tokenService;
     private readonly IMapper _mapper;
+    private readonly IGatewayPricesService _gatewayPrices;
     
     public async Task<string> CreateSubscriptionCheckout(CreateSubscriptionCheckoutRequest request)
     {
@@ -59,5 +63,41 @@ public class SubscriptionService : ISubscriptionService
             request.SuccessUrl, request.CancelUrl);
         
         return result;
+    }
+
+    public async Task<SubscriptionPlansResponse> GetSubscriptionPlans()
+    {
+        var plans = Enum.GetValues<SubscriptionEnum>().ToList();
+        var priceTasks = plans.Select(async plan =>
+        {
+            decimal price = 0;
+            if(plan != SubscriptionEnum.FREE)
+                price = await _gatewayPrices.GetPriceBySubscription(plan);
+
+            return new
+            {
+                Plan = plan,
+                Price = price
+            };
+        });
+
+        var prices = await Task.WhenAll(priceTasks);
+        
+        var response = new SubscriptionPlansResponse()
+        {
+            Plans = prices.Select(d =>
+            {
+                var planResponse = new SubscriptionPlanResponse()
+                {
+                    Name = d.Plan.ToString(),
+                    Price = d.Price,
+                    Description = d.Plan.GetDescription()
+                };
+
+                return planResponse;
+            }).ToList()
+        };
+
+        return response;
     }
 }

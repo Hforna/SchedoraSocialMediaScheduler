@@ -88,6 +88,7 @@ public static class ServicesConfiguration
         StripeConfiguration.ApiKey = configuration.GetValue<string>("services:payment:stripe:apiKey");
         
         services.AddScoped<ICustomerPaymentService, StripeCustomerService>();
+        services.AddScoped<IGatewayPricesService, StripePricesService>();
         services.AddScoped<ISubscriptionPaymentService, StripeSubscriptionPaymentService>();
     }
     

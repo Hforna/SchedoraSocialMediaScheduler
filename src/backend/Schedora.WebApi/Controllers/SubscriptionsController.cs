@@ -18,9 +18,12 @@ public class SubscriptionsController : ControllerBase
     }
     
     [HttpGet("plans")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAvailablePlans()
     {
-        return Ok();
+        var result = await _subscriptionService.GetSubscriptionPlans();
+        
+        return Ok(result);
     }
 
     [HttpPost]
@@ -28,6 +31,6 @@ public class SubscriptionsController : ControllerBase
     {
         var result = await _subscriptionService.CreateSubscriptionCheckout(request);
         
-        return Created(string.Empty, result);
+        return Ok(result);
     }
 }
