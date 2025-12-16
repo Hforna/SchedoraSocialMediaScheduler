@@ -20,7 +20,7 @@ public interface IAuthService
 
 public class AuthService : IAuthService
 {
-    public AuthService(ILogger<IAuthService> logger, IMapper mapper, 
+    public AuthService(ILogger<AuthService> logger, IMapper mapper, 
         ITokenService tokenService, IUnitOfWork uow, 
         IPasswordCryptographyService cryptographyService, IEmailService emailService, 
         UserManager<User> userManager, IActivityLogService activityLogService)

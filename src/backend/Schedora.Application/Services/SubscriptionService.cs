@@ -7,6 +7,7 @@ public interface ISubscriptionService
 {
     public Task<string> CreateSubscriptionCheckout(CreateSubscriptionCheckoutRequest request);
     public Task<SubscriptionPlansResponse> GetSubscriptionPlans();
+    public Task<UserSubscriptionPlanResponse> GetCurrentUserSubscriptionPlan();
 }
 
 public class SubscriptionService : ISubscriptionService
@@ -98,6 +99,25 @@ public class SubscriptionService : ISubscriptionService
             }).ToList()
         };
 
+        return response;
+    }
+
+    public async Task<UserSubscriptionPlanResponse> GetCurrentUserSubscriptionPlan()
+    {
+        var user = await _tokenService.GetUserByToken();
+
+        var response = new UserSubscriptionPlanResponse()
+        {
+            Name = user.SubscriptionTier.ToString(),
+            Description = user.SubscriptionTier.GetDescription()
+        };
+
+        if (user.SubscriptionTier == SubscriptionEnum.FREE)
+            return response;
+
+        response.Price = await _gatewayPrices.GetPriceBySubscription(user.SubscriptionTier);
+        response.ExpiresAt = user.SubscriptionExpiresAt;
+        
         return response;
     }
 }

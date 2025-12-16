@@ -19,16 +19,6 @@ public class EmailService : IEmailService
         var root = AppContext.BaseDirectory;
         var templatePath = Path.Combine(root, "EmailTemplates");
 
-        Console.WriteLine("RazorLight base path:");
-        Console.WriteLine(templatePath);
-
-        if (!Directory.Exists(templatePath))
-            throw new Exception($"EmailTemplates não encontrado: {templatePath}");
-
-        foreach (var file in Directory.GetFiles(templatePath))
-            Console.WriteLine("Arquivo encontrado: " + Path.GetFileName(file));
-
-
         _razorEngine = new RazorLightEngineBuilder()
             .UseFileSystemProject(templatePath)
             .UseMemoryCachingProvider()

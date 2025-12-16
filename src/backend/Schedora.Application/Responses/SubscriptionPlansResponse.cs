@@ -8,6 +8,11 @@ public class SubscriptionPlansResponse
 public class SubscriptionPlanResponse
 {
     public string Name { get; set; }
-    public decimal Price { get; set; }
+    public decimal Price { get; set; } = 0;
     public string Description { get; set; }
+}
+
+public class UserSubscriptionPlanResponse : SubscriptionPlanResponse
+{
+    public DateTime? ExpiresAt { get; set; }
 }
