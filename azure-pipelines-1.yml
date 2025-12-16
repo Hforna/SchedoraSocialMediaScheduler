@@ -18,14 +18,7 @@ stages:
       pool: macschedora
       displayName: buildJob
       steps:
-        - task: Docker@2
-          displayName: buildDocker
-          inputs:
-            command: build
-            dockerfile: src/backend/Schedora.WebApi/Dockerfile
-            buildContext: '$(Build.SourcesDirectory)'
-            tags: |
-              $(tag)
+      - template: job1.yaml
 - stage: tests
   dependsOn: build
   displayName: tests
