@@ -7,22 +7,10 @@ namespace Schedora.Infrastructure.Services.Payment;
 
 public class StripePricesService : IGatewayPricesService
 {
-    public const string Pro = "price_1SchwV01ThTiNs0ZXZtb0aJN";
-    public const string Business = "price_1Schzo01ThTiNs0ZZ9rHQYDL";
-
-    public string ConvertSubscriptionEnumToPrice(SubscriptionEnum subscription)
-    {
-        return subscription switch
-        {
-            SubscriptionEnum.PRO => Pro,
-            SubscriptionEnum.BUSINESS => Business,
-            _ => throw new DomainException("Invalid subscription type")
-        };
-    }
 
     public async Task<decimal> GetPriceBySubscription(SubscriptionEnum subscription)
     {
-        var priceId = ConvertSubscriptionEnumToPrice(subscription);
+        var priceId = subscription.GetPrice();
         
         var service = new PriceService();
         var price = await service.GetAsync(priceId);
