@@ -2,11 +2,11 @@ job: buildApp
 displayName: buildApp
 pool: macschedora
 steps:
-    - task: Docker@2
-        displayName: buildDocker
-        inputs:
-            command: build
-            build: src/backend/Schedora.WebApi/Dockerfile
-            buildContext: '$(Build.SourcesDirectory)'
-            tags: |
-                $(tag)
+- task: Docker@2
+  displayName: buildDocker
+  inputs:
+    command: build
+    dockerfile: src/backend/Schedora.WebApi/Dockerfile
+    buildContext: '$(Build.SourcesDirectory)'
+    tags: |
+      $(tag)
