@@ -4,4 +4,5 @@ public interface ISocialAccountRepository
 {
     public Task<bool> SocialAccountLinkedToUserExists(long userId, string platformUserId, string platform);
     public Task<List<SocialAccount>> GetUserSocialAccounts(long userId, string platform);
+    public Task<Dictionary<string, int>> GetUserSocialAccountConnectedPerPlatform(long userId);
 }

@@ -29,7 +29,7 @@ public class SocialAccount : Entity
         return new()
         {
             UserId = userId,
-            Platform = platform,
+            Platform = SocialPlatformsNames.NormalizePlatform(platform),
             PlatformUserId = platformUserId,
             UserName = userName,
             AccessToken = accessToken,

@@ -14,5 +14,7 @@ public static class ServicesConfiguration
     static void AddServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<ISocialAccountDomainService, SocialAccountDomainService>();
+        services.AddScoped<ISubscriptionDomainService, SubscriptionDomainService>();
+        services.AddScoped<IMediaDomainService, MediaDomainService>();
     }
 }

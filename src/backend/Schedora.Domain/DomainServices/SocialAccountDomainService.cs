@@ -6,7 +6,7 @@ namespace Schedora.Domain.DomainServices;
 
 public interface ISocialAccountDomainService
 {
-    public Task<bool> UserAbleToConnectAccount(User user, SubscriptionEnum userSubscriptionPlan, string platform);
+    public Task<bool> UserAbleToConnectAccount(User user, Subscription subscription, string platform);
 }
 
 public class SocialAccountDomainService : ISocialAccountDomainService
@@ -20,7 +20,7 @@ public class SocialAccountDomainService : ISocialAccountDomainService
     private readonly IUnitOfWork _uow;
     private readonly ILogger<SocialAccountDomainService> _logger;
     
-    public async Task<bool> UserAbleToConnectAccount(User user, SubscriptionEnum userSubscriptionPlan, string platform)
+    public async Task<bool> UserAbleToConnectAccount(User user, Subscription subscription, string platform)
     {
         var userSocialAccounts = await _uow.SocialAccountRepository.GetUserSocialAccounts(user.Id, platform);
 
@@ -29,8 +29,8 @@ public class SocialAccountDomainService : ISocialAccountDomainService
 
         var subscrptionType = user.SubscriptionTier;
         
-        var userReached =  UserReachedMaxAccounts(userSocialAccounts.Count + 1, subscrptionType);
-        var accountsCanConnect = SubscriptionRules.MaxAccountsPerPlatformBySubscription(subscrptionType);
+        var userReached =  UserReachedMaxAccounts(userSocialAccounts.Count + 1, subscription);
+        var accountsCanConnect = subscription.MaxAccountsPerPlatformBySubscription();
         
         if(userReached)
             throw new DomainException($"User only can connect to  {accountsCanConnect} accounts");
@@ -38,8 +38,8 @@ public class SocialAccountDomainService : ISocialAccountDomainService
         return true;
     }
 
-    private bool UserReachedMaxAccounts(int totalConnected, SubscriptionEnum subscription)
+    private bool UserReachedMaxAccounts(int totalConnected, Subscription subscription)
     {
-        return SubscriptionRules.MaxAccountsPerPlatformBySubscription(subscription) <= totalConnected;
+        return subscription.MaxAccountsPerPlatformBySubscription() <= totalConnected;
     }
 }

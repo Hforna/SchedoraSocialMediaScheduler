@@ -11,21 +11,35 @@ public class Subscription : IEntity
     public string GatewayCustomerId { get; set; } = string.Empty;
     public string GatewayPriceId { get; set; } = string.Empty;
     public SubscriptionStatus Status { get; set; }
+    public SubscriptionEnum SubscriptionTier { get; set; }
     public DateTime CurrentPeriodEnd { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? CanceledAt { get; set; }
-}
-
-public static class SubscriptionRules
-{
-    public static int MaxAccountsPerPlatformBySubscription(SubscriptionEnum subscription)
+    
+    public int MaxAccountsPerPlatformBySubscription()
     {
-        return subscription switch
+        return GetRuleForEachPlan<int>(1, 3, 10);
+    }
+
+    //Return total storage to SubscriptionTier plan in megabytes
+    public long TotalStorageAllowed()
+    {
+        return GetRuleForEachPlan<long>(500, 5000, 50000);
+    }
+
+    public TimeSpan TotalTimeToStorageRetention()
+    {
+        return GetRuleForEachPlan<TimeSpan>(TimeSpan.FromDays(180), TimeSpan.FromDays(730), TimeSpan.FromDays(3000));
+    }
+
+    private T GetRuleForEachPlan<T>(T free, T pro, T business)
+    {
+        return SubscriptionTier switch
         {
-            SubscriptionEnum.FREE => 1,
-            SubscriptionEnum.PRO => 3,
-            SubscriptionEnum.BUSINESS => 10,
-            _ => throw new DomainException($"Subscription {subscription} is not supported.")
+            SubscriptionEnum.FREE => free,
+            SubscriptionEnum.PRO => pro,
+            SubscriptionEnum.BUSINESS => business,
+            _ => throw new DomainException($"Subscription {SubscriptionTier} is not supported.")
         };
     }
 }
