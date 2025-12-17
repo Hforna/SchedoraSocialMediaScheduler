@@ -28,14 +28,18 @@ public class SocialAccountDomainService : ISocialAccountDomainService
             return true;
 
         var subscrptionType = user.SubscriptionTier;
-
-        if (subscrptionType == SubscriptionEnum.FREE)
-            throw new DomainException("User already have an account connected to this platform");
-        if (subscrptionType == SubscriptionEnum.PRO && userSocialAccounts.Count >= 3)
-            throw new DomainException("User only can connect to 3 accounts per platform");
-        if (subscrptionType == SubscriptionEnum.BUSINESS && userSocialAccounts.Count >= 10)
-            throw new DomainException("User only can connect to 10 accounts");
+        
+        var userReached =  UserReachedMaxAccounts(userSocialAccounts.Count + 1, subscrptionType);
+        var accountsCanConnect = SubscriptionRules.MaxAccountsPerPlatformBySubscription(subscrptionType);
+        
+        if(userReached)
+            throw new DomainException($"User only can connect to  {accountsCanConnect} accounts");
 
         return true;
+    }
+
+    private bool UserReachedMaxAccounts(int totalConnected, SubscriptionEnum subscription)
+    {
+        return SubscriptionRules.MaxAccountsPerPlatformBySubscription(subscription) <= totalConnected;
     }
 }

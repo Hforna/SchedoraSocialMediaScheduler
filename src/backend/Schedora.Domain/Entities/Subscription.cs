@@ -1,3 +1,5 @@
+using Schedora.Domain.Exceptions;
+
 namespace Schedora.Domain.Entities;
 
 public class Subscription : IEntity
@@ -12,4 +14,18 @@ public class Subscription : IEntity
     public DateTime CurrentPeriodEnd { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? CanceledAt { get; set; }
+}
+
+public static class SubscriptionRules
+{
+    public static int MaxAccountsPerPlatformBySubscription(SubscriptionEnum subscription)
+    {
+        return subscription switch
+        {
+            SubscriptionEnum.FREE => 1,
+            SubscriptionEnum.PRO => 3,
+            SubscriptionEnum.BUSINESS => 10,
+            _ => throw new DomainException($"Subscription {subscription} is not supported.")
+        };
+    }
 }

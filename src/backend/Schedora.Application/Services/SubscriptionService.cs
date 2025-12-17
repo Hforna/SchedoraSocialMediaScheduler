@@ -8,14 +8,17 @@ public interface ISubscriptionService
     public Task<string> CreateSubscriptionCheckout(CreateSubscriptionCheckoutRequest request);
     public Task<SubscriptionPlansResponse> GetSubscriptionPlans();
     public Task<UserSubscriptionPlanResponse> GetCurrentUserSubscriptionPlan();
+    public Task<UsageLimitsResponse> GetUsageLimits();
 }
 
 public class SubscriptionService : ISubscriptionService
 {
     public SubscriptionService(ILogger<SubscriptionService> logger, ISubscriptionPaymentService subscriptionPaymentService, 
-        ICustomerPaymentService customerPaymentService, ITokenService tokenService, IMapper mapper, IGatewayPricesService  gatewayPrices)
+        ICustomerPaymentService customerPaymentService, ITokenService tokenService, 
+        IMapper mapper, IGatewayPricesService  gatewayPrices, IActivityLogService activityLogService)
     {
         _logger = logger;
+        _activityLogService = activityLogService;
         _subscriptionPaymentService = subscriptionPaymentService;
         _customerPaymentService = customerPaymentService;
         _gatewayPrices = gatewayPrices;
@@ -29,6 +32,7 @@ public class SubscriptionService : ISubscriptionService
     private readonly ITokenService _tokenService;
     private readonly IMapper _mapper;
     private readonly IGatewayPricesService _gatewayPrices;
+    private readonly IActivityLogService _activityLogService;
     
     public async Task<string> CreateSubscriptionCheckout(CreateSubscriptionCheckoutRequest request)
     {
@@ -56,7 +60,7 @@ public class SubscriptionService : ISubscriptionService
             {
                 _logger.LogError(e,  e.Message);
                 
-                throw new InternalServiceException("It has occured an error while trying to create payment gateway customer");
+                throw new InternalServiceException("It has occured an error while trying to create payment checkout");
             }
         }
         
@@ -119,5 +123,12 @@ public class SubscriptionService : ISubscriptionService
         response.ExpiresAt = user.SubscriptionExpiresAt;
         
         return response;
+    }
+
+    public async Task<UsageLimitsResponse> GetUsageLimits()
+    {
+        var user = await _tokenService.GetUserByToken();
+        
+        
     }
 }

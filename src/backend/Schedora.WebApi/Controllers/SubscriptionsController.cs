@@ -16,13 +16,7 @@ namespace Schedora.WebApi.Controllers;
 public class SubscriptionsController : ControllerBase
 {
     private readonly ISubscriptionService _subscriptionService;
-    
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SubscriptionsController"/> class.
-    /// </summary>
-    /// <param name="subscriptionService">
-    /// Service responsible for handling subscription business logic.
-    /// </param>
+ 
     public SubscriptionsController(ISubscriptionService subscriptionService)
     {
         _subscriptionService = subscriptionService;
@@ -41,6 +35,12 @@ public class SubscriptionsController : ControllerBase
         var result = await _subscriptionService.GetSubscriptionPlans();
         
         return Ok(result);
+    }
+
+    [HttpGet("usage")]
+    public async Task<IActionResult> PlanUsage()
+    {
+        
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public class SubscriptionsController : ControllerBase
     /// <returns>
     /// Returns data required to complete the subscription checkout process.
     /// </returns>
-    [HttpPost]
+    [HttpPost("checkout")]
     [SwaggerRequestExample(typeof(CreateSubscriptionCheckoutRequest), typeof(CreateSubscriptionCheckoutRequestExample))]
     public async Task<IActionResult> CreateSubscriptionCheckoutSession([FromBody]CreateSubscriptionCheckoutRequest request)
     {

@@ -16,17 +16,10 @@ namespace Schedora.WebApi.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize]
-/// <summary>
-/// Users API controller.
-/// </summary>
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="UsersController"/> class.
-    /// </summary>
-    /// <param name="userService">Service responsible for user-related business logic.</param>
     public UsersController(IUserService userService)
     {
         _userService = userService;
