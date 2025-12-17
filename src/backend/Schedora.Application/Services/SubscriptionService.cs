@@ -105,7 +105,7 @@ public class SubscriptionService : ISubscriptionService
 
         return response;
     }
-
+    
     public async Task<UserSubscriptionPlanResponse> GetCurrentUserSubscriptionPlan()
     {
         var user = await _tokenService.GetUserByToken();
