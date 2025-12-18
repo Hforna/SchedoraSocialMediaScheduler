@@ -3,6 +3,7 @@
 public interface IUserRepository
 {
     public Task<bool> UserByEmailExists(string email);
+    public Task<User?> GetUserById(long id);
     public Task<User?> UserByEmail(string email);
     public Task<User?> GetUserByCustomerGatewayId(string customerGatewayId);
     public Task<User?> UserByEmailNotConfirmed(string email);

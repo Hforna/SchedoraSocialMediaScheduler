@@ -6,7 +6,7 @@ namespace Schedora.Domain.DomainServices;
 
 public interface ISocialAccountDomainService
 {
-    public Task<bool> UserAbleToConnectAccount(User user, Subscription subscription, string platform);
+    public Task<bool> UserAbleToConnectAccount(User user, string platform);
 }
 
 public class SocialAccountDomainService : ISocialAccountDomainService
@@ -20,17 +20,15 @@ public class SocialAccountDomainService : ISocialAccountDomainService
     private readonly IUnitOfWork _uow;
     private readonly ILogger<SocialAccountDomainService> _logger;
     
-    public async Task<bool> UserAbleToConnectAccount(User user, Subscription subscription, string platform)
+    public async Task<bool> UserAbleToConnectAccount(User user, string platform)
     {
         var userSocialAccounts = await _uow.SocialAccountRepository.GetUserSocialAccounts(user.Id, platform);
 
         if (!userSocialAccounts.Any())
             return true;
-
-        var subscrptionType = user.SubscriptionTier;
         
-        var userReached =  UserReachedMaxAccounts(userSocialAccounts.Count + 1, subscription);
-        var accountsCanConnect = subscription.MaxAccountsPerPlatformBySubscription();
+        var userReached =  UserReachedMaxAccounts(userSocialAccounts.Count + 1, user.Subscription);
+        var accountsCanConnect = user.Subscription.MaxAccountsPerPlatformBySubscription();
         
         if(userReached)
             throw new DomainException($"User only can connect to  {accountsCanConnect} accounts");

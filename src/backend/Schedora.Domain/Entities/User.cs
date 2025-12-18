@@ -12,13 +12,12 @@ public class User : IdentityUser<long>, IEntity
     public bool IsActive { get; set; } = true;
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpires { get; set; }
-    public SubscriptionEnum SubscriptionTier { get; set; } = SubscriptionEnum.FREE; 
-    public DateTime? SubscriptionExpiresAt { get; set; }
     public Address? Address { get; set; }
     public DateTime CreatedAt { get; } = DateTime.UtcNow;
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public DateTime UpdatedAt { get; } = DateTime.UtcNow;
     public string? GatewayCustomerId { get; set;  }
+    public Subscription? Subscription { get; set; }
 
     public void UpdatePassword(string password, string hash)
     {

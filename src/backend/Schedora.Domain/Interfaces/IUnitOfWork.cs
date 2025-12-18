@@ -6,5 +6,6 @@ public interface IUnitOfWork
     public IUserRepository UserRepository { get; set; }
     public ISocialAccountRepository SocialAccountRepository { get; set; }
     public IMediaRepository MediaRepository { get; set; }
+    public ISubscriptionRepository SubscriptionRepository { get; set; }
     public Task Commit();
 }
