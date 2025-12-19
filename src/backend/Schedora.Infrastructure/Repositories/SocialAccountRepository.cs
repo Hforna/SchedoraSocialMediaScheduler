@@ -29,4 +29,9 @@ public class SocialAccountRepository : BaseRepository, ISocialAccountRepository
             .GroupBy(d => d.Platform)
             .ToDictionaryAsync(d => d.Key, f => f.Count());
     }
+
+    public async Task<List<SocialAccount>> GetAllTwitterSocialAccounts()
+    {
+        return await _context.SocialAccounts.Where(d => d.Platform == SocialPlatformsNames.Twitter).ToListAsync();
+    }
 }

@@ -12,6 +12,7 @@ using Schedora.Infrastructure;
 using Schedora.Infrastructure.Externals.Services;
 using Schedora.Infrastructure.RabbitMq;
 using Schedora.Infrastructure.Services;
+using Schedora.Workers;
 using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -76,6 +77,7 @@ builder.Services.AddRouting(d => d.LowercaseUrls = true);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddDomain(builder.Configuration);
+builder.Services.AddWorkers(builder.Configuration);
 
 var tokenValidationParameters = new TokenValidationParameters()
 {
@@ -119,6 +121,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+var scheduler = app.Services.GetRequiredService<IWorkerScheduler>();
+scheduler.ScheduleWorks();
 
 //app.UseHttpsRedirection();
 

@@ -2,8 +2,12 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Schedora.Infrastructure\Schedora.Infrastructure.csproj" />
-      <ProjectReference Include="..\Schedora.WebApi\Schedora.WebApi.csproj" />
       <ProjectReference Include="..\Schedora.Domain\Schedora.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Hangfire.AspNetCore" Version="1.8.22" />
+      <PackageReference Include="Hangfire.SqlServer" Version="1.8.22" />
     </ItemGroup>
 
     <PropertyGroup>

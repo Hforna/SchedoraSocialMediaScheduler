@@ -41,6 +41,7 @@
       <ProjectReference Include="..\Schedora.Application\Schedora.Application.csproj" />
       <ProjectReference Include="..\Schedora.Domain\Schedora.Domain.csproj" />
       <ProjectReference Include="..\Schedora.Infrastructure\Schedora.Infrastructure.csproj" />
+      <ProjectReference Include="..\Schedora.Workers\Schedora.Workers.csproj" />
     </ItemGroup>
 
     <ItemGroup>

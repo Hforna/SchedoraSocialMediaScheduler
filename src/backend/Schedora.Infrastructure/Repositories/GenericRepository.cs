@@ -26,6 +26,11 @@ public class GenericRepository : BaseRepository, IGenericRepository
         _context.Set<T>().Update(entity);
     }
 
+    public void UpdateRange<T>(List<T> entity) where T : class, IEntity
+    {
+        _context.Set<T>().UpdateRange(entity);
+    }
+
     public void DeleteRange<T>(List<T> entities) where T : class, IEntity
     {
         _context.Set<T>().RemoveRange(entities);

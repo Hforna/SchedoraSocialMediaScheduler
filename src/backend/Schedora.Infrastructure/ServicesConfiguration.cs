@@ -66,12 +66,14 @@ public static class ServicesConfiguration
                 configuration.GetValue<string>("services:auth:jwt:signKey")!,
                 configuration.GetValue<int>("services:auth:jwt:expiresAt"));
         });
-        services.AddSingleton<ICryptographyService, CryptographyService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IRequestService, RequestService>();
         services.AddScoped<IActivityLogService, ActivityLogService>();
+        
         services.AddScoped<IExternalOAuthAuthenticationService, TwitterExternalOAuthAuthenticationService>();
         services.AddScoped<IExternalOAuthAuthenticationService, LinkedInOAuthAuthenticationService>();
+        services.AddScoped<IOAuthTokenService, TwitterExternalOAuthAuthenticationService>();
+        
         services.AddScoped<ILinkedInService, LinkedInService>();
         services.AddScoped<IPkceService, PkceService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -80,6 +82,7 @@ public static class ServicesConfiguration
         
         services.AddScoped<ITokensCryptographyService, TokensHashService>();
         services.AddScoped<IPasswordCryptographyService, PasswordHashService>();
+        services.AddSingleton<ICryptographyService, CryptographyService>();
         
         services.AddSingleton<ITwitterOAuthConfiguration, TwitterOAuthConfiguration>();
         services.AddSingleton<ILinkedInOAuthConfiguration, LinkedInOAuthConfiguration>();

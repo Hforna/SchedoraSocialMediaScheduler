@@ -60,7 +60,7 @@ public class TwitterService : ITwitterService
     }
 }
 
-public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthenticationService
+public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthenticationService, IOAuthTokenService
 {
     public string Platform { get; } = SocialPlatformsNames.Twitter;
     
@@ -171,7 +171,37 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
             throw;
         }
     }
-    
+
+    public async Task<ExternalServicesTokensDto> RefreshToken(string refreshToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var httpClient = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
+        
+        try
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_oauthConfig.GetTwitterOAuthUri()}token");
+            requestMessage.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "grant_type", "refresh_token" },
+                { "refresh_token", refreshToken },
+                { "client_id", _clientId },
+            });
+            
+            var request = await httpClient.SendAsync(requestMessage);
+            request.EnsureSuccessStatusCode();
+
+            var content = await request.Content.ReadAsStringAsync();
+            var deserialize = JsonSerializer.Deserialize<ExternalServicesTokensDto>(content);
+            
+            return deserialize!;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, e.Message);
+            
+            throw;
+        }
+    }
 }
 
 public interface IPkceService

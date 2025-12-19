@@ -80,7 +80,7 @@ public class SocialAccountsController : ControllerBase
         var stateResponse = await _socialAccountService.GetStateResponse(state, SocialPlatformsNames.LinkedIn);
 
         return Ok(stateResponse.RedirectUrl);
-    }
+     }
     
     [HttpGet("twitter/callback")]
     [EndpointName("TwitterCallback")]

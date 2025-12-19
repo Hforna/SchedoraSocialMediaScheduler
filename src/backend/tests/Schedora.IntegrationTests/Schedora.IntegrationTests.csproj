@@ -25,12 +25,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Schedora.WebApi\Schedora.WebApi.csproj" />
   </ItemGroup>
-
-<<<<<<< HEAD
+  
   <ItemGroup>
     <Folder Include="Controllers\" />
   </ItemGroup>
-
-=======
->>>>>>> 924efe6 (resolve stash conflicts)
 </Project>
