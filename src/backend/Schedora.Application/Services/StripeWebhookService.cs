@@ -43,56 +43,51 @@ public class StripeWebhookService : IStripeWebhookService
         var priceId = subscriptionDto.Items.FirstOrDefault()!.Price.Id;
         _logger.LogInformation("Gateway price id");
         
-        var subscription = new Subscription()
-        {
-            GatewayCustomerId = customerId,
-            GatewayPriceId = priceId,
-            UserId = user.Id,
-            GatewayProvider = "stripe",
-            GatewaySubscriptionId = subscriptionDto.Id,
-            CurrentPeriodEnd = DateTime.UtcNow.AddSeconds(subscriptionDto.CurrentPeriodEnd),
-            CreatedAt = DateTime.UtcNow.AddSeconds(subscriptionDto.CurrentPeriodStart)
-        };
-
+        var subscriptionType = _gatewayPricesService.ConvertPriceToSubscriptionEnum(priceId);
+        var subscriptionStatus = SubscriptionStatus.Incomplete;
+        
         switch (subscriptionDto.Status)
         {
             case SubscriptionStatuses.Incomplete:
-                subscription.Status = SubscriptionStatus.Incomplete;
+                subscriptionStatus = SubscriptionStatus.Incomplete;
                 break;
             case SubscriptionStatuses.Active:
-                subscription.Status = SubscriptionStatus.Active;
+                subscriptionStatus = SubscriptionStatus.Active;
                 break;
             case SubscriptionStatuses.Canceled:
-                subscription.Status = SubscriptionStatus.Canceled;
+                subscriptionStatus = SubscriptionStatus.Canceled;
                 break;
             case SubscriptionStatuses.Unpaid:
-                subscription.Status = SubscriptionStatus.Unpaid;
+                subscriptionStatus = SubscriptionStatus.Unpaid;
                 break;
             case SubscriptionStatuses.IncompleteExpired:
-                subscription.Status = SubscriptionStatus.IncompleteExpired;
+                subscriptionStatus = SubscriptionStatus.IncompleteExpired;
                 break;
             case SubscriptionStatuses.Trialing:
-                subscription.Status = SubscriptionStatus.Trialing;
+                subscriptionStatus = SubscriptionStatus.Trialing;
                 break;
             case SubscriptionStatuses.PastDue:
-                subscription.Status = SubscriptionStatus.PastDue;
+                subscriptionStatus = SubscriptionStatus.PastDue;
                 break;
             case SubscriptionStatuses.Paused:
-                subscription.Status = SubscriptionStatus.Paused;
+                subscriptionStatus = SubscriptionStatus.Paused;
                 break;
         }
         
+        var subscription = new Subscription
+        (
+            user.Id,
+            subscriptionType,
+            "stripe",
+            subscriptionStatus,
+            customerId,
+            priceId,
+            subscriptionDto.Id,
+            DateTime.UtcNow.AddSeconds(subscriptionDto.CurrentPeriodEnd),
+            DateTime.UtcNow.AddSeconds(subscriptionDto.CurrentPeriodStart)
+        );
+        
         await _uow.GenericRepository.Add<Subscription>(subscription);
-
-        if (subscription.Status != SubscriptionStatus.Active)
-        {
-            var priceEnum = _gatewayPricesService.ConvertPriceToSubscriptionEnum(priceId);
-            
-            user.SubscriptionExpiresAt = subscription.CurrentPeriodEnd;
-            user.SubscriptionTier = priceEnum;
-            
-            _uow.GenericRepository.Update<User>(user);
-        }
 
         await _uow.Commit();
     }

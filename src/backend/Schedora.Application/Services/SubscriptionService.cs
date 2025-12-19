@@ -1,3 +1,4 @@
+using Schedora.Domain.DomainServices;
 using Schedora.Domain.Dtos;
 using SocialScheduler.Domain.Constants;
 
@@ -15,13 +16,17 @@ public class SubscriptionService : ISubscriptionService
 {
     public SubscriptionService(ILogger<SubscriptionService> logger, ISubscriptionPaymentService subscriptionPaymentService, 
         ICustomerPaymentService customerPaymentService, ITokenService tokenService, 
-        IMapper mapper, IGatewayPricesService  gatewayPrices, IActivityLogService activityLogService)
+        IMapper mapper, IGatewayPricesService  gatewayPrices, 
+        IActivityLogService activityLogService, IUnitOfWork uow, ISocialAccountDomainService socialAccountDomainService,  IMediaDomainService mediaDomainService)
     {
         _logger = logger;
         _activityLogService = activityLogService;
         _subscriptionPaymentService = subscriptionPaymentService;
         _customerPaymentService = customerPaymentService;
+        _socialAccountDomainService = socialAccountDomainService;
+        _mediaDomainService = mediaDomainService;
         _gatewayPrices = gatewayPrices;
+        _uow = uow;
         _tokenService = tokenService;
         _mapper = mapper;
     }
@@ -29,10 +34,13 @@ public class SubscriptionService : ISubscriptionService
     private readonly ILogger<SubscriptionService> _logger;
     private readonly ISubscriptionPaymentService  _subscriptionPaymentService;
     private readonly ICustomerPaymentService  _customerPaymentService;
+    private readonly ISocialAccountDomainService _socialAccountDomainService;
+    private readonly IMediaDomainService _mediaDomainService;
     private readonly ITokenService _tokenService;
     private readonly IMapper _mapper;
     private readonly IGatewayPricesService _gatewayPrices;
     private readonly IActivityLogService _activityLogService;
+    private readonly IUnitOfWork _uow;
     
     public async Task<string> CreateSubscriptionCheckout(CreateSubscriptionCheckoutRequest request)
     {
@@ -112,15 +120,15 @@ public class SubscriptionService : ISubscriptionService
 
         var response = new UserSubscriptionPlanResponse()
         {
-            Name = user.SubscriptionTier.ToString(),
-            Description = user.SubscriptionTier.GetDescription()
+            Name = user.Subscription.SubscriptionTier.ToString(),
+            Description = user.Subscription.SubscriptionTier.GetDescription()
         };
 
-        if (user.SubscriptionTier == SubscriptionEnum.FREE)
+        if (user.Subscription.SubscriptionTier == SubscriptionEnum.FREE)
             return response;
 
-        response.Price = await _gatewayPrices.GetPriceBySubscription(user.SubscriptionTier);
-        response.ExpiresAt = user.SubscriptionExpiresAt;
+        response.Price = await _gatewayPrices.GetPriceBySubscription(user.Subscription.SubscriptionTier);
+        response.ExpiresAt = user.Subscription.CurrentPeriodEndsAt;
         
         return response;
     }
@@ -129,6 +137,32 @@ public class SubscriptionService : ISubscriptionService
     {
         var user = await _tokenService.GetUserByToken();
         
+        var accountsCount = await _uow.SocialAccountRepository.GetUserSocialAccountConnectedPerPlatform(user!.Id);
+        var accountLimit = user.Subscription.MaxAccountsPerPlatformBySubscription();
         
+        var platformLimitsResponse = accountsCount.Select((platform) =>
+        {
+            var response = new UsageLimitsConnectedAccountsResponse()
+            {
+                Platform = platform.Key,
+                SocialAccountsConnected = platform.Value,
+                SocialAccountsLimit = accountLimit
+            };
+
+            return response;
+        }).ToList();
+
+        var totalStoraged = await _uow.MediaRepository.GetTotalUserMediaStoraged(user.Id);
+        var storageLimit = user.Subscription.TotalStorageAllowed();
+
+        var response = new UsageLimitsResponse()
+        {
+            ConnectedAccounts = platformLimitsResponse,
+            TotalStorageMb = totalStoraged,
+            LimitStorageMb = storageLimit,
+            MediaRetentionEndsAt = await _mediaDomainService.GetTimeToMediaRetentEnds(user.Id, user.Subscription),
+        };
+        
+        return response;
     }
 }

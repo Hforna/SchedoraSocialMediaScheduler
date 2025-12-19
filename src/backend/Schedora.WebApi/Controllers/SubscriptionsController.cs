@@ -40,7 +40,9 @@ public class SubscriptionsController : ControllerBase
     [HttpGet("usage")]
     public async Task<IActionResult> PlanUsage()
     {
+        var result = await _subscriptionService.GetUsageLimits();
         
+        return Ok(result);
     }
 
     /// <summary>

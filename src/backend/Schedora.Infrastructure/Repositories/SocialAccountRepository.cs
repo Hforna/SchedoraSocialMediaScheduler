@@ -20,4 +20,13 @@ public class SocialAccountRepository : BaseRepository, ISocialAccountRepository
         return await _context.SocialAccounts
             .Where(d => d.UserId == userId && d.Platform == platform).ToListAsync();
     }
+
+    public async Task<Dictionary<string, int>> GetUserSocialAccountConnectedPerPlatform(long userId)
+    {
+        return await _context.SocialAccounts
+            .AsNoTracking()
+            .Where(d => d.UserId == userId)
+            .GroupBy(d => d.Platform)
+            .ToDictionaryAsync(d => d.Key, f => f.Count());
+    }
 }

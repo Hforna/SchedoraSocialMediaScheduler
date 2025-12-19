@@ -136,5 +136,7 @@ public static class ServicesConfiguration
         services.AddScoped<IGenericRepository, GenericRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ISocialAccountRepository, SocialAccountRepository>();
+        services.AddScoped<IMediaRepository, MediaRepository>();
+        services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
     }
 }

@@ -90,7 +90,7 @@ public class TokenService : ITokenService
         var handler = new JwtSecurityTokenHandler();
         var read = handler.ReadJwtToken(token);
         var id = long.Parse(read.Claims.FirstOrDefault(d => d.Type == ClaimTypes.Sid)!.Value);
-        var user = await _uow.GenericRepository.GetById<User>(id);
+        var user = await _uow.UserRepository.GetUserById(id);
 
         return user!;
     }

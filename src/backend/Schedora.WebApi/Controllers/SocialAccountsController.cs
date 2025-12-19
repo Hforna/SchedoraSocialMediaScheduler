@@ -77,7 +77,7 @@ public class SocialAccountsController : ControllerBase
         
         await _socialAccountService.ConfigureOAuthTokensFromLinkedin(tokensResult, state);
         
-        var stateResponse = await _socialAccountService.GetStateResponse(code, state);
+        var stateResponse = await _socialAccountService.GetStateResponse(state, SocialPlatformsNames.LinkedIn);
 
         return Ok(stateResponse.RedirectUrl);
     }

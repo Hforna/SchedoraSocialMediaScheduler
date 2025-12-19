@@ -62,6 +62,12 @@ public class AuthService : IAuthService
         if(usersNotActive.Any())
             _uow.GenericRepository.DeleteRange<User>(usersNotActive);
         await _uow.GenericRepository.Add<User>(user);
+        
+        await _uow.Commit();
+
+        var subscription = new Subscription(user.Id, SubscriptionEnum.FREE);
+        await _uow.GenericRepository.Add<Subscription>(subscription);
+        
         await _uow.Commit();
 
         var tokenConfirmation = await _userManager.GenerateEmailConfirmationTokenAsync(user);

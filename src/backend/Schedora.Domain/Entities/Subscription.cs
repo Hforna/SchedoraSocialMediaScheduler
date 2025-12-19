@@ -11,11 +11,32 @@ public class Subscription : IEntity
     public string GatewaySubscriptionId { get; set; } = string.Empty;
     public string GatewayCustomerId { get; set; } = string.Empty;
     public string GatewayPriceId { get; set; } = string.Empty;
-    public SubscriptionStatus Status { get; set; }
+    public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Active;
     public SubscriptionEnum SubscriptionTier { get; set; }
     public DateTime? CurrentPeriodEndsAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? CanceledAt { get; set; }
+
+    public Subscription(long userId, SubscriptionEnum subscriptionTier, string? gatewayProvider,
+        SubscriptionStatus status,
+        string? gatewayCustomerId, string? gatewayPriceId, string? gatewaySubscriptionId, DateTime? currentPeriodEndsAt, DateTime createdAt)
+    {
+        UserId = userId;
+        SubscriptionTier = subscriptionTier;
+        GatewayProvider = gatewayProvider;
+        GatewayCustomerId = gatewayCustomerId;
+        GatewayPriceId = gatewayPriceId;
+        GatewaySubscriptionId = gatewaySubscriptionId;
+        Status = status;
+        CurrentPeriodEndsAt = currentPeriodEndsAt;
+        CreatedAt = createdAt;
+    }
+
+    public Subscription(long userId, SubscriptionEnum subscriptionTier)
+    {
+        UserId = userId;
+        SubscriptionTier = subscriptionTier;
+    }
     
     public int MaxAccountsPerPlatformBySubscription()
     {

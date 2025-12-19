@@ -68,7 +68,7 @@ public class UserService : IUserService
     {
         var user = await _tokenService.GetUserByToken();
 
-        return user!.SubscriptionTier.ToString();
+        return user!.Subscription.SubscriptionTier.ToString();
     }
 
     public async Task<AddressResponse> UpdateAddress(UpdateAddressRequest request)

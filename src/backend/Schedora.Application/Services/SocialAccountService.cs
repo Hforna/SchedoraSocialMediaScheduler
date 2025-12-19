@@ -147,7 +147,7 @@ public class SocialAccountService : ISocialAccountService
         
         var user = await _tokenService.GetUserByToken();
         
-        var userCanConnect = await _socialAccountDomainService.UserAbleToConnectAccount(user, user.SubscriptionTier, platform);
+        var userCanConnect = await _socialAccountDomainService.UserAbleToConnectAccount(user, platform);
         
         return userCanConnect;
     }
@@ -171,7 +171,8 @@ public class SocialAccountService : ISocialAccountService
     private ExternalServicesTokensDto SecureTokens(ExternalServicesTokensDto dto)
     {
         dto.AccessToken = _tokensCryptography.HashToken(dto.AccessToken);
-        dto.RefreshToken = _tokensCryptography.HashToken(dto.RefreshToken);
+        if(!string.IsNullOrEmpty(dto.RefreshToken))
+            dto.RefreshToken = _tokensCryptography.HashToken(dto.RefreshToken);
         
         return dto;
     }

@@ -29,6 +29,11 @@ public class UserRepository : BaseRepository, IUserRepository
             .ToListAsync();
     }
 
+    public async Task<User?> GetUserById(long id)
+    {
+        return await _context.Users.Include(d => d.Subscription).SingleOrDefaultAsync(d => d.Id == id);
+    }
+
     public async Task<User?> UserByEmail(string email)
     {
         return await _context.Users.SingleOrDefaultAsync(d => d.Email == email && d.EmailConfirmed && d.IsActive);
