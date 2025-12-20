@@ -9,8 +9,8 @@ namespace Schedora.Application.Services;
 
 public interface ISocialAccountService
 {
-    public Task ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state);
-    public Task ConfigureOAuthTokensFromOAuthTwitter(string state, string code, string redirectUrl);
+    public Task<string> ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state);
+    public Task<string> ConfigureOAuthTokensFromOAuthTwitter(string state, string code);
     public Task<StateResponseDto> GetStateResponse(string state, string platform);
     public Task<bool> UserCanConnectSocialAccount(string platform);
 }
@@ -58,7 +58,7 @@ public class SocialAccountService : ISocialAccountService
     private readonly ITokensCryptographyService  _tokensCryptography;
     private readonly ISocialAccountDomainService  _socialAccountDomainService;
     
-    public async Task ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state)
+    public async Task<string> ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state)
     {
         var stateResponse = await GetStateResponse(state, SocialPlatformsNames.LinkedIn);
         var userId = stateResponse.UserId;
@@ -80,9 +80,11 @@ public class SocialAccountService : ISocialAccountService
 
         var producerDto = new SocialAccountConnectedDto(socialAccount.Id, userId);
         await _socialAccountProducer.SendAccountConnected(producerDto);
+
+        return stateResponse.RedirectUrl;
     }
 
-    public async Task ConfigureOAuthTokensFromOAuthTwitter(string state,  string code, string redirectUrl)
+    public async Task<string> ConfigureOAuthTokensFromOAuthTwitter(string state,  string code)
     {
         var oauthService =  _externalOAuthAuthenticationService
             .FirstOrDefault(d => d.Platform.Equals(SocialPlatformsNames.Twitter));
@@ -102,7 +104,7 @@ public class SocialAccountService : ISocialAccountService
         if (string.IsNullOrEmpty(codeChallenge))
             throw new UnauthorizedException("Code challenge is null");
         
-        var tokensDto = await oauthService.RequestTokensFromOAuthPlatform(code, redirectUrl, codeChallenge);
+        var tokensDto = await oauthService.RequestTokensFromOAuthPlatform(code, stateResponse.RedirectUrl, codeChallenge);
         
         var socialInfos = await _twitterService.GetUserSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType);
         
@@ -129,6 +131,8 @@ public class SocialAccountService : ISocialAccountService
         
         var producerDto = new SocialAccountConnectedDto(socialAccount.Id, userId);
         await _socialAccountProducer.SendAccountConnected(producerDto);
+
+        return stateResponse.RedirectUrl;
     }
 
     public async Task<StateResponseDto> GetStateResponse(string state, string platform)

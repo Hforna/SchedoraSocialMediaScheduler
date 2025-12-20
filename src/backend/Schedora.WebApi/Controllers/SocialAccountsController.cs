@@ -51,8 +51,16 @@ public class SocialAccountsController : ControllerBase
             throw new RequestException("Invalid platform name");
         
         var baseUri = HttpContext.GetBaseUri();
-        var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, "LinkedInCallback");
-        var callbackUrl = $"{HttpContext.GetBaseUri()}{callbackEndpoint![1..]}";
+        
+        var endpointName = "";
+        endpointName = service.Platform switch
+        {
+            SocialPlatformsNames.LinkedIn => "LinkedInCallback",
+            SocialPlatformsNames.Twitter => "TwitterCallback",
+            _ => throw new InternalServiceException("Error while trying to get the callback endpoint")
+        };
+        var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, endpointName);
+        var callbackUrl = $"{baseUri}{callbackEndpoint![1..]}";
         
         var result = await service.GetOAuthRedirectUrl(redirectUrl, callbackUrl);
 
@@ -73,12 +81,11 @@ public class SocialAccountsController : ControllerBase
         var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, "LinkedInCallback");
         var redirectUri = $"{HttpContext.GetBaseUri()}{callbackEndpoint![1..]}";
         
-        var tokensResult = await externalService!.RequestTokensFromOAuthPlatform(code, redirectUri);
-        
-        await _socialAccountService.ConfigureOAuthTokensFromLinkedin(tokensResult, state);
-        
         var stateResponse = await _socialAccountService.GetStateResponse(state, SocialPlatformsNames.LinkedIn);
 
+        var tokensResult = await externalService!.RequestTokensFromOAuthPlatform(code, stateResponse.RedirectUrl);
+        await _socialAccountService.ConfigureOAuthTokensFromLinkedin(tokensResult, state);
+        
         return Ok(stateResponse.RedirectUrl);
      }
     
@@ -87,11 +94,8 @@ public class SocialAccountsController : ControllerBase
     public async Task<IActionResult> TwitterCallback([FromQuery]string state, [FromQuery]string code)
     {
         var baseUri = HttpContext.GetBaseUri();
-        baseUri = "https://91fea65eb992.ngrok-free.app/";
-        var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, "TwitterCallback");
-        var redirectUri = $"{baseUri}{callbackEndpoint![1..]}";
 
-        await _socialAccountService.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUri);
+        await _socialAccountService.ConfigureOAuthTokensFromOAuthTwitter(state, code);
         
         var stateResponse = await _socialAccountService.GetStateResponse(code, state);
         
