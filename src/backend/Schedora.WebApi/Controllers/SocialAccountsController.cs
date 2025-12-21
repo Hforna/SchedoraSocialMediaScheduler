@@ -51,7 +51,7 @@ public class SocialAccountsController : ControllerBase
             throw new RequestException("Invalid platform name");
         
         var baseUri = HttpContext.GetBaseUri();
-        
+        baseUri = "https://4fdc66fbbe74.ngrok-free.app/";
         var endpointName = "";
         endpointName = service.Platform switch
         {
@@ -94,10 +94,13 @@ public class SocialAccountsController : ControllerBase
     public async Task<IActionResult> TwitterCallback([FromQuery]string state, [FromQuery]string code)
     {
         var baseUri = HttpContext.GetBaseUri();
+        baseUri = "https://4fdc66fbbe74.ngrok-free.app/";
+        var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, "TwitterCallback");
+        var redirectUri = $"{baseUri}{callbackEndpoint![1..]}";
 
-        await _socialAccountService.ConfigureOAuthTokensFromOAuthTwitter(state, code);
+        await _socialAccountService.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUri);
         
-        var stateResponse = await _socialAccountService.GetStateResponse(code, state);
+        var stateResponse = await _socialAccountService.GetStateResponse(state, SocialPlatformsNames.Twitter);
         
         return Ok(stateResponse.RedirectUrl);
     }

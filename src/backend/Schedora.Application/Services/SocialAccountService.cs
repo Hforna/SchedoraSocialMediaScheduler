@@ -10,7 +10,7 @@ namespace Schedora.Application.Services;
 public interface ISocialAccountService
 {
     public Task<string> ConfigureOAuthTokensFromLinkedin(ExternalServicesTokensDto dto, string state);
-    public Task<string> ConfigureOAuthTokensFromOAuthTwitter(string state, string code);
+    public Task<string> ConfigureOAuthTokensFromOAuthTwitter(string state, string code, string callbackUri);
     public Task<StateResponseDto> GetStateResponse(string state, string platform);
     public Task<bool> UserCanConnectSocialAccount(string platform);
 }
@@ -84,7 +84,7 @@ public class SocialAccountService : ISocialAccountService
         return stateResponse.RedirectUrl;
     }
 
-    public async Task<string> ConfigureOAuthTokensFromOAuthTwitter(string state,  string code)
+    public async Task<string> ConfigureOAuthTokensFromOAuthTwitter(string state,  string code, string callbackUrl)
     {
         var oauthService =  _externalOAuthAuthenticationService
             .FirstOrDefault(d => d.Platform.Equals(SocialPlatformsNames.Twitter));
@@ -104,7 +104,7 @@ public class SocialAccountService : ISocialAccountService
         if (string.IsNullOrEmpty(codeChallenge))
             throw new UnauthorizedException("Code challenge is null");
         
-        var tokensDto = await oauthService.RequestTokensFromOAuthPlatform(code, stateResponse.RedirectUrl, codeChallenge);
+        var tokensDto = await oauthService.RequestTokensFromOAuthPlatform(code, callbackUrl, codeChallenge);
         
         var socialInfos = await _twitterService.GetUserSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType);
         
