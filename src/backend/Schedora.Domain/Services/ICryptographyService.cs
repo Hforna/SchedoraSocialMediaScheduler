@@ -7,6 +7,6 @@ public interface ICryptographyService
 
 public interface ITokensCryptographyService
 {
-    public string HashToken(string token);
-    public bool CompareTokenHash(string token, string hash);
+    public string EncryptToken(string token);
+    public string DecryptToken(string token);
 }

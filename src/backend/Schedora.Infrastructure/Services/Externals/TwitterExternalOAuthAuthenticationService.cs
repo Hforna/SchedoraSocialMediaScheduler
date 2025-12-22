@@ -179,18 +179,22 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
         
         try
         {
+            var authorization = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_clientId}:{_clientSecret}"));
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authorization);
+            
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_oauthConfig.GetTwitterOAuthUri()}token");
             requestMessage.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 { "grant_type", "refresh_token" },
                 { "refresh_token", refreshToken },
-                { "client_id", _clientId },
             });
             
             var request = await httpClient.SendAsync(requestMessage);
-            request.EnsureSuccessStatusCode();
-
+            
             var content = await request.Content.ReadAsStringAsync();
+            
+            request.EnsureSuccessStatusCode();
+            
             var deserialize = JsonSerializer.Deserialize<ExternalServicesTokensDto>(content);
             
             return deserialize!;

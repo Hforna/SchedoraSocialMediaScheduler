@@ -80,7 +80,7 @@ public static class ServicesConfiguration
         services.AddScoped<IOAuthStateService,  OAuthStateService>();
         services.AddScoped<ITwitterService, TwitterService>();
         
-        services.AddScoped<ITokensCryptographyService, TokensHashService>();
+        services.AddScoped<ITokensCryptographyService, TokensEncryptService>();
         services.AddScoped<IPasswordCryptographyService, PasswordHashService>();
         services.AddSingleton<ICryptographyService, CryptographyService>();
         

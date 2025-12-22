@@ -26,6 +26,8 @@ public class RefreshTokenService
 
         var twitterTokensService = scope.ServiceProvider
             .GetRequiredService<IOAuthTokenService>();
+
+        var cryptographyService = scope.ServiceProvider.GetRequiredService<ITokensCryptographyService>();
         
         var socialAccounts = await _uow.SocialAccountRepository.GetAllTwitterSocialAccounts();
 
@@ -34,12 +36,13 @@ public class RefreshTokenService
 
         foreach (var socialAccount in socialAccounts)
         {
-            if (string.IsNullOrEmpty(socialAccount.RefreshToken))
+            if (!string.IsNullOrEmpty(socialAccount.RefreshToken))
             {
-                var tokens = await twitterTokensService.RefreshToken(socialAccount.RefreshToken!);
+                var decrypt = cryptographyService.DecryptToken(socialAccount.RefreshToken);
+                var tokens = await twitterTokensService.RefreshToken(decrypt);
                 
-                socialAccount.AccessToken = tokens.AccessToken;
-                socialAccount.RefreshToken = tokens.RefreshToken;
+                socialAccount.AccessToken = cryptographyService.EncryptToken(tokens.AccessToken);
+                socialAccount.RefreshToken = cryptographyService.EncryptToken(tokens.RefreshToken);
                 socialAccount.LastTokenRefreshAt = DateTime.UtcNow;
             }
         }

@@ -22,8 +22,9 @@
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.22" />
 		<PackageReference Include="RabbitMQ.Client" Version="7.2.0" />
 		<PackageReference Include="RazorLight" Version="2.3.1" />
+		<PackageReference Include="Sodium.Core" Version="1.4.0" />
 		<PackageReference Include="StackExchange.Redis" Version="2.10.1" />
-		<PackageReference Include="Stripe.net" Version="50.0.0" />
+		<PackageReference Include="Stripe.net" Version="49.2.0" />
 	</ItemGroup>
 
 	<ItemGroup>

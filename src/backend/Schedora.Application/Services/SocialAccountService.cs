@@ -174,9 +174,9 @@ public class SocialAccountService : ISocialAccountService
     
     private ExternalServicesTokensDto SecureTokens(ExternalServicesTokensDto dto)
     {
-        dto.AccessToken = _tokensCryptography.HashToken(dto.AccessToken);
+        dto.AccessToken = _tokensCryptography.EncryptToken(dto.AccessToken);
         if(!string.IsNullOrEmpty(dto.RefreshToken))
-            dto.RefreshToken = _tokensCryptography.HashToken(dto.RefreshToken);
+            dto.RefreshToken = _tokensCryptography.EncryptToken(dto.RefreshToken);
         
         return dto;
     }

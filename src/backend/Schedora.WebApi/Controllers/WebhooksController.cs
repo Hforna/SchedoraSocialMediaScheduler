@@ -9,29 +9,32 @@ namespace Schedora.WebApi.Controllers;
 [Route("api/[controller]")]
 public class WebhooksController : ControllerBase
 {
-    public WebhooksController(IStripeWebhookService stripeWebhookService, ILogger<WebhooksController> logger)
+    public WebhooksController(IStripeWebhookService stripeWebhookService, 
+        ILogger<WebhooksController> logger, IConfiguration configuration)
     {
         _stripeWebhookService = stripeWebhookService;
         _logger = logger;
+        _configuration = configuration;
     }
 
     private readonly IStripeWebhookService _stripeWebhookService;
     private readonly ILogger<WebhooksController> _logger;
+    private readonly IConfiguration _configuration;
     
     [HttpPost("stripe")]
     public async Task<IActionResult> StripeWebhook()
     {
         var request = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
 
-        var endpointSecret = "asdfasdf";
+        var endpointSecret = _configuration.GetValue<string>("services:payment:stripe:webhook:endpointSecret");
         
         try
         {
             var signatureHeader = HttpContext.Request.Headers["Stripe-Signature"];
             
-            var stripeEvent = EventUtility.ParseEvent(request);
+            var stripeEvent = EventUtility.ParseEvent(request, throwOnApiVersionMismatch: false);
 
-            stripeEvent = EventUtility.ConstructEvent(request, signatureHeader, endpointSecret);
+            stripeEvent = EventUtility.ConstructEvent(request, signatureHeader, endpointSecret, throwOnApiVersionMismatch: false);
 
             switch (stripeEvent.Type)
             {
