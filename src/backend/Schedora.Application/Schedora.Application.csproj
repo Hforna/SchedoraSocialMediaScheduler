@@ -14,6 +14,9 @@
 
     <ItemGroup>
       <PackageReference Include="AutoMapper" Version="15.1.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Localization.Routing" Version="2.3.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Routing" Version="2.3.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions" Version="2.3.0" />
       <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.22" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.11" />
       <PackageReference Include="Stripe.net" Version="50.0.0" />

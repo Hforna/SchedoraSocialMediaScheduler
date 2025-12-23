@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Schedora.Application.Requests;
+using Schedora.Application.Responses;
 using Schedora.Application.Services;
+using Schedora.WebApi.Helpers;
 
 namespace Schedora.WebApi.Controllers;
 
@@ -19,10 +21,12 @@ namespace Schedora.WebApi.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly ILinkHelper _linkHelper;
 
-    public UsersController(IUserService userService)
+    public UsersController(IUserService userService, ILinkHelper linkHelper)
     {
         _userService = userService;
+        _linkHelper = linkHelper;
     }
 
     /// <summary>
@@ -32,9 +36,18 @@ public class UsersController : ControllerBase
     /// Returns the authenticated user's profile information.
     /// </returns>
     [HttpGet("me")]
+    [EndpointName("GetUserInfos")]
     public async Task<IActionResult> GetUserAuthenticatedInfos()
     {
         var result = await _userService.GetUserAuthenticatedInfos();
+        result.Links = new List<LinkResponse>()
+        {
+            _linkHelper.GenerateLinkResponse("UpdateUserInfos", "update", HttpMethods.Put),
+            _linkHelper.GenerateLinkResponse("UpdateAddress", "update-address", HttpMethods.Patch),
+            _linkHelper.GenerateLinkResponse("GetSubscription", "subscription", HttpMethods.Get),
+            _linkHelper.GenerateLinkResponse("GetUserInfos", "self", HttpMethods.Get),
+        };
+        
         return Ok(result);
     }
 
@@ -46,6 +59,7 @@ public class UsersController : ControllerBase
     /// Returns the updated address information.
     /// </returns>
     [HttpPatch("address")]
+    [EndpointName("UpdateAddress")]
     public async Task<IActionResult> UpdateAddress([FromBody]UpdateAddressRequest request)
     {
         var result = await _userService.UpdateAddress(request);
@@ -61,6 +75,7 @@ public class UsersController : ControllerBase
     /// Returns the updated user information.
     /// </returns>
     [HttpPut]
+    [EndpointName("UpdateUserInfos")]
     public async Task<IActionResult> UpdateUserInfos([FromBody]UpdateUserRequest request)
     {
         var result = await _userService.UpdateUserInfos(request);
@@ -81,19 +96,5 @@ public class UsersController : ControllerBase
         await _userService.UpdatePassword(request);
 
         return Ok();
-    }
-
-    /// <summary>
-    /// Gets the subscription information of the authenticated user.
-    /// </summary>
-    /// <returns>
-    /// Returns the user's current subscription details.
-    /// </returns>
-    [HttpGet("subscription")]
-    public async Task<IActionResult> GetUserSubscription()
-    {
-        var result = await _userService.GetUserSubscription();
-
-        return Ok(result);
     }
 }

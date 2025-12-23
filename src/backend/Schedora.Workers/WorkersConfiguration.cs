@@ -40,7 +40,7 @@ public class WorkerScheduler : IWorkerScheduler
         RecurringJob.AddOrUpdate<RefreshTokenService>(                       
             "refresh-twitter-token-job",                                     
             d => d.RegenerateTwitterTokens(),                                
-            Cron.Minutely(),                                                   
+            Cron.Hourly(),                                                   
             new RecurringJobOptions()                                        
             {                                                                
                 TimeZone =  TimeZoneInfo.Utc                                 

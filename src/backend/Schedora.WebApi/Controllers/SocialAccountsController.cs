@@ -33,7 +33,7 @@ public class SocialAccountsController : ControllerBase
     /// <summary>
     /// Returns a uri to twitter oauth authorization requesting user permissions for app access on behalf
     /// </summary>
-    /// <param name="platform">the platform to connect the social account, meanwhile linkedin or twitter</param>
+    /// <param name="platform">the platform to connect the social account, meanwhile LinkedIn or twitter</param>
     /// <param name="redirectUrl">redirect url after the user authorize the platform access</param>
     /// <returns>returns the url to platform oauth authorization page</returns>
     [HttpGet("connect/{platform}")]

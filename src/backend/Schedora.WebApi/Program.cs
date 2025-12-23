@@ -12,6 +12,7 @@ using Schedora.Infrastructure;
 using Schedora.Infrastructure.Externals.Services;
 using Schedora.Infrastructure.RabbitMq;
 using Schedora.Infrastructure.Services;
+using Schedora.WebApi.Helpers;
 using Schedora.Workers;
 using Swashbuckle.AspNetCore.Filters;
 
@@ -103,6 +104,8 @@ builder.Services.AddAuthentication(opt =>
     cfg.TokenValidationParameters = tokenValidationParameters;
     cfg.SaveToken = true;
 });
+
+builder.Services.AddScoped<ILinkHelper, LinkHelper>();
 
 builder.Services.Configure<RabbitMqConnection>(builder.Configuration.GetSection("RabbitMq"));
 

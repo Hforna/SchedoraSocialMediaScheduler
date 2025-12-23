@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 using SocialScheduler.Domain.Constants;
 
 namespace Schedora.Application.Services;
@@ -13,7 +14,7 @@ public interface IAuthService
     public Task ConfirmEmail(string email, string token);
     public Task<LoginResponse> LoginByApplication(LoginRequest request);
     public Task<LoginResponse> RefreshToken(string refreshToken);
-    public Task ResetPasswordRequest(string email, string uri);
+    public Task ResetPasswordRequest(string email);
     public Task ResetUserPassword(string email, string token, string password);
     public Task RevokeToken();
 }
@@ -23,9 +24,10 @@ public class AuthService : IAuthService
     public AuthService(ILogger<AuthService> logger, IMapper mapper, 
         ITokenService tokenService, IUnitOfWork uow, 
         IPasswordCryptographyService cryptographyService, IEmailService emailService, 
-        UserManager<User> userManager, IActivityLogService activityLogService)
+        UserManager<User> userManager, IActivityLogService activityLogService, IConfiguration configuration)
     {
         _logger = logger;
+        _configuration = configuration;
         _activityLogService = activityLogService;
         _mapper = mapper;
         _tokenService = tokenService;
@@ -42,6 +44,7 @@ public class AuthService : IAuthService
     private readonly IPasswordCryptographyService _cryptographyService;
     private readonly IEmailService _emailService;
     private readonly UserManager<User> _userManager;
+    private readonly IConfiguration  _configuration;
     private readonly IActivityLogService _activityLogService;
     
     public async Task<UserResponse> RegisterUser(UserRegisterRequest request, string emailConfirmatioUri)
@@ -82,7 +85,12 @@ public class AuthService : IAuthService
             24);
         await _emailService.SendEmail(user.Email, user.UserName, emailMessage, $"Hi {user.UserName} confirm your e-mail here");
 
-        return _mapper.Map<UserResponse>(user);
+        var response = _mapper.Map<UserResponse>(user);
+        response.Links = new List<LinkResponse>()
+        {
+
+        };
+        return _mapper.Map<UserResponse>(user);;
     }
 
     public async Task ConfirmEmail(string email, string token)
@@ -168,7 +176,7 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task ResetPasswordRequest(string email, string uri)
+    public async Task ResetPasswordRequest(string email)
     {
         var user = await _uow.UserRepository.UserByEmail(email)
             ?? throw new NotFoundException("User by e-mail was not found");
@@ -176,7 +184,7 @@ public class AuthService : IAuthService
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 
-        var resetUri = $"{uri}?email={user.Email}&token={encodedToken}";
+        var resetUri = $"{_configuration.GetSection("frontend:uri").Value}?email={user.Email}&token={encodedToken}";
         var emailTemplate = await _emailService.RenderResetPassword(user.UserName, CompanyConstraints.CompanyName, resetUri, 24);
         await _emailService.SendEmail(user.Email, user.UserName, emailTemplate, $"Hi {user.UserName} reset your password here");
     }
@@ -186,7 +194,19 @@ public class AuthService : IAuthService
         var user = await _uow.UserRepository.UserByEmail(email)
             ?? throw new NotFoundException("User by e-mail was not found");
 
+        var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+        var verifyToken = await _userManager.ResetPasswordAsync(user, decodedToken, password);
+
+        if (!verifyToken.Succeeded)
+        {
+            _logger.LogError($"{verifyToken.Errors.Select(e => e.Description)}");
+            
+            throw new RequestException($"Reset password failed: {string.Join(", ", verifyToken.Errors.Select(d => d.Description))}");
+        }
         
+        user.PasswordHash = _cryptographyService.HashPassword(decodedToken);
+        _uow.GenericRepository.Update<User>(user);
+        await _uow.Commit();
     }
 
     public async Task RevokeToken()

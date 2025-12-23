@@ -52,6 +52,7 @@ public class SubscriptionsController : ControllerBase
     /// Returns the authenticated user's current subscription details.
     /// </returns>
     [HttpGet("current")]
+    [EndpointName("GetSubscription")]
     public async Task<IActionResult> GetCurrentUserSubscription()
     {
         var result = await _subscriptionService.GetCurrentUserSubscriptionPlan();

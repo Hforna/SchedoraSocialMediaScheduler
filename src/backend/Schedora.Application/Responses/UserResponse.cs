@@ -2,7 +2,7 @@
 
 namespace Schedora.Application.Responses;
 
-public class UserResponse
+public class UserResponse : BaseResponse
 {
     public string Email { get; set; }
     public string UserName { get; set; }

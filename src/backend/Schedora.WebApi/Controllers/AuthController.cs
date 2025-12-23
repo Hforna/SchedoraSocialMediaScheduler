@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Schedora.Application.Requests;
+using Schedora.Application.Responses;
 using Schedora.Application.Services;
 using Schedora.WebApi.Extensions;
+using Schedora.WebApi.Helpers;
 using Schedora.WebApi.RequestExamples;
 using Swashbuckle.AspNetCore.Filters;
 
@@ -24,10 +26,13 @@ public class AuthController : ControllerBase
     private readonly LinkGenerator _linkGenerator;
     private readonly ILogger<AuthController> _logger;
     private readonly IConfiguration _configuration;
+    private readonly ILinkHelper _linkHelper;
 
-    public AuthController(IAuthService authService, IConfiguration configuration, LinkGenerator linkGenerator, ILogger<AuthController> logger)
+    public AuthController(IAuthService authService, IConfiguration configuration, 
+        LinkGenerator linkGenerator, ILogger<AuthController> logger, ILinkHelper  linkHelper)
     {
         _authService = authService;
+        _linkHelper = linkHelper;
         _linkGenerator = linkGenerator;
         _logger = logger;
         _configuration = configuration;
@@ -48,6 +53,11 @@ public class AuthController : ControllerBase
         var uri = $"{_configuration.GetValue<string>("appConfigs:appUrl")}{confirmEmailEndpoint![1..]}";
         _logger.LogInformation("Email uri to confirm email {uri}", uri);
         var result = await _authService.RegisterUser(request, uri);
+        result.Links = new List<LinkResponse>()
+        {
+            _linkHelper.GenerateLinkResponse("UpdateUserInfos", "update", HttpMethods.Put),
+            _linkHelper.GenerateLinkResponse("GetUserInfos", "self", HttpMethods.Get),
+        };
 
         return Created(string.Empty, result);
     }
@@ -95,10 +105,7 @@ public class AuthController : ControllerBase
     [HttpPost("forgot-password")]
     public async Task<IActionResult> UserForgotPasswordRequest([FromBody]ForgotPasswordRequest request)
     {
-        var resetPasswordEndpoint = _linkGenerator.GetPathByName(HttpContext, "ResetPassword");
-        var uri = $"{_configuration.GetValue<string>("appConfigs:appUrl")}{resetPasswordEndpoint![1..]}";
-        _logger.LogInformation("Email uri to confirm email {uri}", uri);
-        await _authService.ResetPasswordRequest(request.Email, uri);
+        await _authService.ResetPasswordRequest(request.Email);
 
         return Ok();
     }

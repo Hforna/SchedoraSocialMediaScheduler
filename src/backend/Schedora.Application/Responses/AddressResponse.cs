@@ -1,6 +1,6 @@
 namespace Schedora.Application.Responses;
 
-public class AddressResponse
+public class AddressResponse : BaseResponse
 {
     public string City { get; set; }
     public string Country { get; set; }
