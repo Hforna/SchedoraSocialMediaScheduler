@@ -24,7 +24,8 @@ public class WebhooksController : ControllerBase
     [HttpPost("stripe")]
     public async Task<IActionResult> StripeWebhook()
     {
-        var request = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+        var reader = new StreamReader(HttpContext.Request.Body);
+        var request = await reader.ReadToEndAsync();
 
         var endpointSecret = _configuration.GetValue<string>("services:payment:stripe:webhook:endpointSecret");
         
@@ -32,15 +33,13 @@ public class WebhooksController : ControllerBase
         {
             var signatureHeader = HttpContext.Request.Headers["Stripe-Signature"];
             
-            var stripeEvent = EventUtility.ParseEvent(request, throwOnApiVersionMismatch: false);
+            var stripeEvent = EventUtility.ConstructEvent(request, signatureHeader, endpointSecret, throwOnApiVersionMismatch: false);
 
-            stripeEvent = EventUtility.ConstructEvent(request, signatureHeader, endpointSecret, throwOnApiVersionMismatch: false);
-
-            switch (stripeEvent.Type)
+            if(stripeEvent.Type.StartsWith("invoice", StringComparison.InvariantCultureIgnoreCase))
             {
-                case EventTypes.CustomerSubscriptionCreated:
-                    await _stripeWebhookService.HandleSubscriptionCreatedEvent(stripeEvent.Object);
-                    break;
+                var invoice = stripeEvent.Data.Object as Invoice;
+                if(invoice.BillingReason.StartsWith("subscription"))
+                    await _stripeWebhookService.HandleInvoiceSubscriptionEvent(invoice);
             }
 
             return Ok();

@@ -13,7 +13,7 @@ public class UserRepository : BaseRepository, IUserRepository
 
     public async Task<User?> GetUserByCustomerGatewayId(string customerGatewayId)
     {
-        return await _context.Users.SingleOrDefaultAsync(d => d.GatewayCustomerId == customerGatewayId && d.IsActive);
+        return await _context.Users.Include(d => d.Subscription).SingleOrDefaultAsync(d => d.GatewayCustomerId == customerGatewayId && d.IsActive);
     }
 
     public async Task<User?> UserByEmailNotConfirmed(string email)

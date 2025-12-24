@@ -10,6 +10,7 @@ public interface ISubscriptionService
     public Task<SubscriptionPlansResponse> GetSubscriptionPlans();
     public Task<UserSubscriptionPlanResponse> GetCurrentUserSubscriptionPlan();
     public Task<UsageLimitsResponse> GetUsageLimits();
+    public Task CancelCurrentSubscription();
 }
 
 public class SubscriptionService : ISubscriptionService
@@ -63,6 +64,10 @@ public class SubscriptionService : ISubscriptionService
                     user.Email,
                     user.PhoneNumber,
                     userAddress);
+                
+                user.GatewayCustomerId = customerGatewayId;
+                _uow.GenericRepository.Update<User>(user);
+                await _uow.Commit();
             }
             catch (Exception e)
             {
@@ -164,5 +169,15 @@ public class SubscriptionService : ISubscriptionService
         };
         
         return response;
+    }
+
+    public async Task CancelCurrentSubscription()
+    {
+        var user = await _tokenService.GetUserByToken();
+
+        if (user.Subscription.SubscriptionTier == SubscriptionEnum.FREE)
+            throw new UnauthorizedException("User cannot cancel their subscription because it's a free tier");
+
+        await _subscriptionPaymentService.CancelCurrentSubscription(user.GatewayCustomerId!);
     }
 }

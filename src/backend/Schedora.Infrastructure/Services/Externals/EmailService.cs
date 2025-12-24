@@ -46,6 +46,18 @@ public class EmailService : IEmailService
         return await _razorEngine.CompileRenderAsync("ResetPasswordRequest.cshtml", model);
     }
 
+    public async Task<string> RenderSubscriptionActivated(string subscriptionTier, string userName, string companyName)
+    {
+        var model = new SubscriptionActivatedModel()
+        {
+            CompanyName = companyName,
+            SubscriptionTier = subscriptionTier,
+            UserName = userName
+        };
+        
+        return await _razorEngine.CompileRenderAsync("SubscriptionActivated.cshtml", model);
+    }
+
     public async Task SendEmail(string toEmail, string toUserName, string body, string subject)
     {
         var message = new MimeMessage();

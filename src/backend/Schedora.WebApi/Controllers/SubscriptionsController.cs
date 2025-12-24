@@ -60,6 +60,15 @@ public class SubscriptionsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("cancel")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CancelCurrentSubscription()
+    {
+        await _subscriptionService.CancelCurrentSubscription();
+        
+        return Ok();
+    }
+
     /// <summary>
     /// Creates a checkout session to start a new subscription.
     /// </summary>

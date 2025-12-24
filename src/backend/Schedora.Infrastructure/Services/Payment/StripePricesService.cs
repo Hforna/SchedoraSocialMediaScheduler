@@ -23,8 +23,12 @@ public class StripePricesService : IGatewayPricesService
 
     public SubscriptionEnum ConvertPriceToSubscriptionEnum(string price)
     {
-        return Enum.TryParse<SubscriptionEnum>(price, true, out SubscriptionEnum priceEnum) 
-            ? priceEnum 
-            : throw new InternalServiceException("Invalid subscription type");
+        var values = Enum.GetValues<SubscriptionEnum>();
+        SubscriptionEnum? subscription = values.FirstOrDefault(d => d != SubscriptionEnum.FREE && d.GetPrice() == price);
+        
+        if(subscription is null)
+            throw new DomainException("Subscription tier was not found");
+
+        return (SubscriptionEnum)subscription;
     }
 }
