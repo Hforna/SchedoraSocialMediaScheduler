@@ -46,6 +46,9 @@ public class SubscriptionService : ISubscriptionService
     public async Task<string> CreateSubscriptionCheckout(CreateSubscriptionCheckoutRequest request)
     {
         var user = await _tokenService.GetUserByToken();
+        
+        if(user.Subscription.SubscriptionTier == request.Subscription)
+            throw new  DomainException("User is already subscribed to this plan");
 
         var customerGatewayId = user.GatewayCustomerId;
         
@@ -179,5 +182,12 @@ public class SubscriptionService : ISubscriptionService
             throw new UnauthorizedException("User cannot cancel their subscription because it's a free tier");
 
         await _subscriptionPaymentService.CancelCurrentSubscription(user.GatewayCustomerId!);
+
+        user.Subscription.ChangeToFreeTier();
+
+        var socialAccounts = await  _uow.SocialAccountRepository.GetUserSocialAccounts();
+        
+        _uow.GenericRepository.Update<User>(user);
+        await _uow.Commit();
     }
 }

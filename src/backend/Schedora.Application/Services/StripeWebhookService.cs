@@ -47,17 +47,17 @@ public class StripeWebhookService : IStripeWebhookService
         subscription!.GatewayPriceId = priceId;
         subscription.CurrentPeriodEndsAt = subscriptionGateway.CurrentPeriodEndsAt;
         subscription.CreatedAt = subscriptionGateway.CurrentPeriodStartsAt;
-        subscription.GatewaySubscriptionId = subscriptionGateway.Id;
+        subscription.GatewaySubscriptionId = lineData.SubscriptionId;
         subscription.GatewayProvider = "stripe";
         subscription.SubscriptionTier = subscriptionType;
         subscription.Status = Enum.Parse<SubscriptionStatus>(subscriptionGateway.Status, true);
+        
+        _uow.GenericRepository.Update<Subscription>(subscription);
+        await _uow.Commit();
 
         var emailTemplate = await _emailService.RenderSubscriptionActivated(subscription.SubscriptionTier.ToString(),
             user.UserName, CompanyConstraints.CompanyName);
 
         await _emailService.SendEmail(user.Email, user.UserName, emailTemplate, $"Hi {user.FirstName}  {user.LastName} your subscription has been updated");
-        
-        _uow.GenericRepository.Update<Subscription>(subscription);
-        await _uow.Commit();
     }
 }
