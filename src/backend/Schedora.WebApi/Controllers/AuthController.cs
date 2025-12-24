@@ -105,7 +105,9 @@ public class AuthController : ControllerBase
     [HttpPost("forgot-password")]
     public async Task<IActionResult> UserForgotPasswordRequest([FromBody]ForgotPasswordRequest request)
     {
-        await _authService.ResetPasswordRequest(request.Email);
+        var resetEndpoint = _linkGenerator.GetPathByName(HttpContext, "ResetPassword");
+        
+        await _authService.ResetPasswordRequest(request.Email,  resetEndpoint!);
 
         return Ok();
     }

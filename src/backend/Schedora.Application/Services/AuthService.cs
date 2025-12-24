@@ -14,7 +14,7 @@ public interface IAuthService
     public Task ConfirmEmail(string email, string token);
     public Task<LoginResponse> LoginByApplication(LoginRequest request);
     public Task<LoginResponse> RefreshToken(string refreshToken);
-    public Task ResetPasswordRequest(string email);
+    public Task ResetPasswordRequest(string email, string resetEndpoint);
     public Task ResetUserPassword(string email, string token, string password);
     public Task RevokeToken();
 }
@@ -176,7 +176,7 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task ResetPasswordRequest(string email)
+    public async Task ResetPasswordRequest(string email, string resetEndpoint)
     {
         var user = await _uow.UserRepository.UserByEmail(email)
             ?? throw new NotFoundException("User by e-mail was not found");
