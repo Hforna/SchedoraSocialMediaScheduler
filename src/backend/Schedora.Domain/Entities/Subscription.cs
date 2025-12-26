@@ -38,6 +38,17 @@ public class Subscription : IEntity
         SubscriptionTier = subscriptionTier;
     }
     
+    public void ChangeToFreeTier()
+    {
+        GatewayPriceId = string.Empty;
+        GatewaySubscriptionId = string.Empty;
+        GatewayProvider = string.Empty;
+        Status = SubscriptionStatus.Active;
+        CurrentPeriodEndsAt = null;
+        CanceledAt = DateTime.UtcNow;
+        SubscriptionTier = SubscriptionEnum.FREE;
+    }
+    
     public int MaxAccountsPerPlatformBySubscription()
     {
         return GetRuleForEachPlan<int>(1, 3, 10);

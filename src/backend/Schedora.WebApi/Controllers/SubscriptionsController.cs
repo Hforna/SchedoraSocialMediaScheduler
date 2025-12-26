@@ -61,7 +61,6 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpPost("cancel")]
-    [AllowAnonymous]
     public async Task<IActionResult> CancelCurrentSubscription()
     {
         await _subscriptionService.CancelCurrentSubscription();

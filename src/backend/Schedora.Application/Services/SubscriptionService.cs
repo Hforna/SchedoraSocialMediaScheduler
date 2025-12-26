@@ -182,10 +182,6 @@ public class SubscriptionService : ISubscriptionService
             throw new UnauthorizedException("User cannot cancel their subscription because it's a free tier");
 
         await _subscriptionPaymentService.CancelCurrentSubscription(user.GatewayCustomerId!);
-
-        user.Subscription.ChangeToFreeTier();
-
-        var socialAccounts = await  _uow.SocialAccountRepository.GetUserSocialAccounts();
         
         _uow.GenericRepository.Update<User>(user);
         await _uow.Commit();
