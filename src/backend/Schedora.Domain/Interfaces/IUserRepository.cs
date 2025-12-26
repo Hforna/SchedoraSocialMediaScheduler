@@ -8,4 +8,5 @@ public interface IUserRepository
     public Task<User?> GetUserByCustomerGatewayId(string customerGatewayId);
     public Task<User?> UserByEmailNotConfirmed(string email);
     public Task<List<User>> GetUsersNotActiveByEmail(string email);
+    public Task<List<User>> GetUsersWithCanceledSubscription();
 }

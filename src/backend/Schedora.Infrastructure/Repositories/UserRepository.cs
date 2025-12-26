@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Schedora.Domain.Entities;
+using Schedora.Domain.Enums;
 using Schedora.Domain.Interfaces;
 using Schedora.Infrastructure.Persistence;
 
@@ -27,6 +28,12 @@ public class UserRepository : BaseRepository, IUserRepository
         return await _context.Users
             .Where(d => d.Email == email && !d.EmailConfirmed && !d.IsActive)
             .ToListAsync();
+    }
+
+    public async Task<List<User>> GetUsersWithCanceledSubscription()
+    {
+        return await _context.Users.Include(d => d.Subscription)
+            .Where(d => d.Subscription.Status == SubscriptionStatus.Canceled).ToListAsync();
     }
 
     public async Task<User?> GetUserById(long id)

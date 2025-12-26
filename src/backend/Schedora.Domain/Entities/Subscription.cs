@@ -38,15 +38,22 @@ public class Subscription : IEntity
         SubscriptionTier = subscriptionTier;
     }
     
-    public void ChangeToFreeTier()
+    public void CancelSubscription()
     {
+        if (SubscriptionTier == SubscriptionEnum.FREE)
+            throw new DomainException("User can't cancel a  free subscription");
+        
         GatewayPriceId = string.Empty;
         GatewaySubscriptionId = string.Empty;
         GatewayProvider = string.Empty;
-        Status = SubscriptionStatus.Active;
+        Status = SubscriptionStatus.Canceled;
         CurrentPeriodEndsAt = null;
         CanceledAt = DateTime.UtcNow;
-        SubscriptionTier = SubscriptionEnum.FREE;
+        if (DateTime.UtcNow >= CurrentPeriodEndsAt)
+        {
+            Status = SubscriptionStatus.Active;
+            SubscriptionTier = SubscriptionEnum.FREE;
+        }
     }
     
     public int MaxAccountsPerPlatformBySubscription()

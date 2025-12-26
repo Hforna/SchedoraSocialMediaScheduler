@@ -34,4 +34,9 @@ public class SocialAccountRepository : BaseRepository, ISocialAccountRepository
     {
         return await _context.SocialAccounts.Where(d => d.Platform == SocialPlatformsNames.Twitter).ToListAsync();
     }
+
+    public async Task<List<SocialAccount>> GetAllUserSocialAccounts(long userId)
+    {
+        return await _context.SocialAccounts.Where(d => d.UserId == userId).ToListAsync();
+    }
 }

@@ -183,6 +183,8 @@ public class SubscriptionService : ISubscriptionService
 
         await _subscriptionPaymentService.CancelCurrentSubscription(user.GatewayCustomerId!);
         
+        user.Subscription.CancelSubscription();
+        
         _uow.GenericRepository.Update<User>(user);
         await _uow.Commit();
     }
