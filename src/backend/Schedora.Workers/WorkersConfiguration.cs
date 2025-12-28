@@ -24,7 +24,6 @@ public static class WorkersConfiguration
 public interface IWorkerScheduler
 {
     public void ScheduleWorks();
-    public void CancelUsersSubscriptions();
 }
 
 public class WorkerScheduler : IWorkerScheduler
@@ -45,11 +44,8 @@ public class WorkerScheduler : IWorkerScheduler
             new RecurringJobOptions()                                        
             {                                                                
                 TimeZone =  TimeZoneInfo.Utc                                 
-            });                                                              
-    }
-
-    public void CancelUsersSubscriptions()
-    {
+            });     
+        
         RecurringJob.AddOrUpdate<SubscriptionService>(
             "user-cancel-subscription-job",
             d => d.HandleSubscriptionsCancellations(),

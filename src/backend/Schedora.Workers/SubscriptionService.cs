@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Logging;
 using Schedora.Domain.Entities;
 using Schedora.Domain.Enums;
@@ -27,10 +28,10 @@ public class SubscriptionService : ISubscriptionService
     {
         var usersCanceled = await _uow.UserRepository.GetUsersWithCanceledSubscription();
 
-        if (!usersCanceled.Any())
-            return;
-
         var usersExpired = usersCanceled.Where(d => DateTime.UtcNow >= d.Subscription.CurrentPeriodEndsAt).ToList();
+        
+        if (!usersCanceled.Any() ||  !usersExpired.Any())
+            return;
 
         foreach (var user in usersExpired)
         {
@@ -38,14 +39,27 @@ public class SubscriptionService : ISubscriptionService
             user.Subscription.SubscriptionTier = SubscriptionEnum.FREE;
 
             var socialAccounts = await _uow.SocialAccountRepository.GetAllUserSocialAccounts(user.Id);
-            socialAccounts = socialAccounts.Select(d =>
+            if (socialAccounts.Any())
             {
-                d.IsActive = false;
-
-                return d;
-            }).ToList();
-            
-            _uow.GenericRepository.UpdateRange<SocialAccount>(socialAccounts);
+                var accountsPerPlatform = socialAccounts.GroupBy(d => d.Platform);
+                foreach (var account in accountsPerPlatform)
+                {
+                    var platformAccounts = account.ToList();
+                    var maxAccountsFree = user.Subscription.MaxAccountsPerPlatformBySubscription();
+                    if (platformAccounts.Count > maxAccountsFree)
+                    {
+                        var notAvailableAccounts = platformAccounts
+                                        .OrderByDescending(d => d.ConnectedAt)
+                                        .Take(platformAccounts.Count - maxAccountsFree)
+                                        .Select(d =>
+                                        {
+                                            d.IsActive = false;
+                                            return d;
+                                        }).ToList();
+                        _uow.GenericRepository.UpdateRange<SocialAccount>(notAvailableAccounts);
+                    }
+                }
+            }
         }
         
         _uow.GenericRepository.UpdateRange<User>(usersExpired);
