@@ -29,7 +29,16 @@ public class SocialAccountsController : ControllerBase
         _logger = logger;
         _linkGenerator = linkGenerator;
     }
-    
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetSocialAccountsConnected()
+    {
+        var result = await _socialAccountService.GetSocialAccountsConnected();
+
+        return Ok(result);
+    }
+
     /// <summary>
     /// Returns a uri to twitter oauth authorization requesting user permissions for app access on behalf
     /// </summary>

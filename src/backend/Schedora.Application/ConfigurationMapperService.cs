@@ -31,7 +31,7 @@ public class ConfigurationMapperService : Profile
     void EntityToResponse()
     {
         CreateMap<User, UserResponse>();
-
+        CreateMap<SocialAccount, SocialAccountResponse>();
         CreateMap<Address, AddressResponse>();
     }
 }

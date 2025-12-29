@@ -13,6 +13,7 @@ public interface ISocialAccountService
     public Task<string> ConfigureOAuthTokensFromOAuthTwitter(string state, string code, string callbackUri);
     public Task<StateResponseDto> GetStateResponse(string state, string platform);
     public Task<bool> UserCanConnectSocialAccount(string platform);
+    public Task<SocialAccountsResponse> GetSocialAccountsConnected();
 }
 
 public class SocialAccountService : ISocialAccountService
@@ -23,7 +24,7 @@ public class SocialAccountService : ISocialAccountService
         IOAuthStateService oauthStateService, IEnumerable<IExternalOAuthAuthenticationService>  externalOAuthAuthenticationService, 
         IUserSession userSession, ITwitterService twitterService, ICookiesService cookies, 
         ISocialAccountCache socialAccountCache, ITokensCryptographyService tokensCryptography, 
-        ISocialAccountDomainService  socialAccountDomainService, IActivityLogService activityLogService)
+        ISocialAccountDomainService  socialAccountDomainService, IActivityLogService activityLogService, ICurrentUserService  currentUserService)
     {
         _logger = logger;
         _cookiesService = cookies;
@@ -33,6 +34,7 @@ public class SocialAccountService : ISocialAccountService
         _socialAccountDomainService = socialAccountDomainService;
         _externalOAuthAuthenticationService = externalOAuthAuthenticationService;
         _oauthStateService = oauthStateService;
+        _currentUserService = currentUserService;
         _tokenService = tokenService;
         _mapper = mapper;
         _uow = uow;
@@ -48,6 +50,7 @@ public class SocialAccountService : ISocialAccountService
     private readonly ISocialAccountCache  _socialAccountCache;
     private readonly IUserSession _userSession;
     private readonly ITokenService _tokenService;
+    private readonly ICurrentUserService  _currentUserService;
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _uow;
     private readonly ILinkedInService  _linkedInService;
@@ -154,6 +157,23 @@ public class SocialAccountService : ISocialAccountService
         var userCanConnect = await _socialAccountDomainService.UserAbleToConnectAccount(user, platform);
         
         return userCanConnect;
+    }
+
+    public async Task<SocialAccountsResponse> GetSocialAccountsConnected()
+    {
+        var user = await _currentUserService.GetUser();
+
+        var socialAccounts = await _uow.SocialAccountRepository.GetAllUserSocialAccounts(user.Id);
+
+        if (!socialAccounts.Any())
+            return new();
+
+        var response = new SocialAccountsResponse
+        {
+            SocialAccounts = _mapper.Map<List<SocialAccountResponse>>(socialAccounts)
+        };
+        
+        return response;
     }
 
     private SocialAccount CreateSocialAccount(ExternalServicesTokensDto tokensDto,
