@@ -38,6 +38,7 @@ public class SocialAccountServiceTests
     private List<IExternalOAuthAuthenticationService> _externalOAuthAuthenticationServices;
     private Mock<IExternalOAuthAuthenticationService> _externalOAuthAuthenticationService;
     private Mock<IActivityLogService> _activityLogService;
+    private Mock<ICurrentUserService> _currentUserService;
 
     public SocialAccountServiceTests()
     {
@@ -56,6 +57,7 @@ public class SocialAccountServiceTests
         _socialAccountDomainService = new Mock<ISocialAccountDomainService>();
         _externalOAuthAuthenticationService = new Mock<IExternalOAuthAuthenticationService>();
         _activityLogService = new Mock<IActivityLogService>();
+        _currentUserService = new Mock<ICurrentUserService>();
         
         _externalOAuthAuthenticationServices = new List<IExternalOAuthAuthenticationService>() { _externalOAuthAuthenticationService.Object };
 
@@ -74,7 +76,8 @@ public class SocialAccountServiceTests
             _accountCache.Object,
             _tokensCryptography.Object,
             _socialAccountDomainService.Object,
-            _activityLogService.Object
+            _activityLogService.Object,
+            _currentUserService.Object
         );
     }
 

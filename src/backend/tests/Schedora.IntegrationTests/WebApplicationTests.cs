@@ -61,14 +61,16 @@ public class WebApplicationTests : WebApplicationFactory<Program>, IAsyncLifetim
             LastName = "Doe",
             Email = "JohnDoe@gmail.com",
             EmailConfirmed = true,
-            SubscriptionTier = SubscriptionEnum.PRO,
             UserName = "JohnDoe",
             SecurityStamp = Guid.NewGuid().ToString(),
             ConcurrencyStamp = Guid.NewGuid().ToString(),
             PasswordHash = passwordHasher.HashPassword("random_cool_password")
         };
-        
         await uow.GenericRepository.Add<User>(user);
+        await uow.Commit();
+        
+        var subscription = new Subscription(user.Id, SubscriptionEnum.FREE);
+        await uow.GenericRepository.Add<Subscription>(subscription);
         await uow.Commit();
 
         User = user;
