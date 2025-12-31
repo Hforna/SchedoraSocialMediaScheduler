@@ -27,13 +27,25 @@ namespace Schedora.Domain.Entities
         public ApprovalStatus ApprovalStatus { get; private set; }
         public string? RejectionReason { get; private set; }
 
-        static Post Create(string content, long userId, PostStatus status, long createdBy, string scheduledTimezone,
-            long? templateId, long? queueId)
+        public static Post Create(string content, long userId, PostStatus status, long createdBy, string scheduledTimezone,
+            long? templateId = null, string? notes = null)
         {
             var post = new Post()
             {
-                
+                Status =  status,
+                CreatedAt = DateTime.UtcNow,
+                Content = content,
+                UserId = userId,
+                CreatedBy =  createdBy,
+                ScheduledTimezone =  scheduledTimezone,
+                TemplateId =  templateId,
+                Notes =  notes,
             };
+
+            if (userId != createdBy)
+                post.ApprovalStatus = ApprovalStatus.Pending;
+            
+            return post;
         }
     }
 }

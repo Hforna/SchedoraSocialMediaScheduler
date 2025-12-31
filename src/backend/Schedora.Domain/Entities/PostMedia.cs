@@ -16,5 +16,22 @@ namespace Schedora.Domain.Entities
         {
             get; private set;
         }
+
+        public PostMedia(long postId, long mediaId, int orderIndex, string altText, string platformSpecificSettings)
+        {
+            PostId = postId;
+            MediaId = mediaId;
+            OrderIndex = orderIndex;
+            AltText = altText;
+            PlatformSpecificSettings = platformSpecificSettings;
+        }
+        
+        public PostMedia(long postId, long mediaId, int orderIndex, string altText)
+        {
+            PostId = postId;
+            MediaId = mediaId;
+            OrderIndex = orderIndex;
+            AltText = altText;
+        }
     }
 }

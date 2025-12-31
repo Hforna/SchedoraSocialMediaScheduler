@@ -19,6 +19,9 @@ public static class ServicesConfiguration
         services.AddScoped<ISocialAccountService, SocialAccountService>();
         services.AddScoped<ISubscriptionService, SubscriptionService>();
         services.AddScoped<IStripeWebhookService, StripeWebhookService>();
+        services.AddScoped<IPostService, PostService>();
+        
+        services.AddScoped<IMediaService, MediaService>();
     }
 
     static void AddMapper(IServiceCollection services)

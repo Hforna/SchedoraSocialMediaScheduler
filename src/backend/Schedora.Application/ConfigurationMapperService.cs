@@ -33,5 +33,6 @@ public class ConfigurationMapperService : Profile
         CreateMap<User, UserResponse>();
         CreateMap<SocialAccount, SocialAccountResponse>();
         CreateMap<Address, AddressResponse>();
+        CreateMap<Post, PostResponse>();
     }
 }

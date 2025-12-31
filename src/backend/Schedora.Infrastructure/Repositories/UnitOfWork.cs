@@ -9,11 +9,12 @@ public class UnitOfWork : IUnitOfWork
 
     public UnitOfWork(DataContext context, IGenericRepository genericRepository, 
         IUserRepository userRepository,  ISocialAccountRepository socialAccountRepository,  
-        IMediaRepository mediaRepository, ISubscriptionRepository subscriptionRepository)
+        IMediaRepository mediaRepository, ISubscriptionRepository subscriptionRepository, ITeamMemberRepository  teamMemberRepository)
     {
         _context = context;
         
         SubscriptionRepository = subscriptionRepository;
+        TeamMemberRepository = teamMemberRepository;
         SocialAccountRepository = socialAccountRepository;
         MediaRepository = mediaRepository;
         GenericRepository = genericRepository;
@@ -23,6 +24,7 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository GenericRepository { get; set; }
     public IUserRepository UserRepository { get; set; }
     public ISocialAccountRepository SocialAccountRepository { get; set; }
+    public ITeamMemberRepository TeamMemberRepository { get; set; }
     public IMediaRepository MediaRepository { get; set; }
     public ISubscriptionRepository SubscriptionRepository { get; set; }
 
