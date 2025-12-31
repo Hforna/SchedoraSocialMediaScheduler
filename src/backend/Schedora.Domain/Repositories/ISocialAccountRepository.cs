@@ -6,5 +6,6 @@ public interface ISocialAccountRepository
     public Task<List<SocialAccount>> GetUserSocialAccounts(long userId, string platform);
     public Task<Dictionary<string, int>> GetUserSocialAccountConnectedPerPlatform(long userId);
     public Task<List<SocialAccount>> GetAllTwitterSocialAccounts();
+    public Task<List<SocialAccount>> GetSocialAccountsByIds(List<long> socialAccountIds);
     public Task<List<SocialAccount>> GetAllUserSocialAccounts(long userId);
 }

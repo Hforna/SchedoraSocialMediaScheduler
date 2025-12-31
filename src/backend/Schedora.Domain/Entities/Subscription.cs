@@ -55,6 +55,17 @@ public class Subscription : IEntity
             SubscriptionTier = SubscriptionEnum.FREE;
         }
     }
+
+    public bool UserCanPostScheduled(int totalSocialAccounts)
+    {
+        return SubscriptionTier switch
+        {
+            SubscriptionEnum.FREE => totalSocialAccounts <= 10,
+            SubscriptionEnum.BUSINESS => true,
+            SubscriptionEnum.PRO => true,
+            _ => throw new DomainException($"Subscription {SubscriptionTier} is not supported.")
+        };
+    }
     
     public int MaxAccountsPerPlatformBySubscription()
     {

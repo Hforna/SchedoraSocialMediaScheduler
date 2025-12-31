@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,5 +26,14 @@ namespace Schedora.Domain.Entities
         public DateTime? ApprovedAt { get; private set; }
         public ApprovalStatus ApprovalStatus { get; private set; }
         public string? RejectionReason { get; private set; }
+
+        static Post Create(string content, long userId, PostStatus status, long createdBy, string scheduledTimezone,
+            long? templateId, long? queueId)
+        {
+            var post = new Post()
+            {
+                
+            };
+        }
     }
 }

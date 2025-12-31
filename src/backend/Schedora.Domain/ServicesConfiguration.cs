@@ -16,5 +16,6 @@ public static class ServicesConfiguration
         services.AddScoped<ISocialAccountDomainService, SocialAccountDomainService>();
         services.AddScoped<ISubscriptionDomainService, SubscriptionDomainService>();
         services.AddScoped<IMediaDomainService, MediaDomainService>();
+        services.AddScoped<IPostDomainService, PostDomainService>();
     }
 }
