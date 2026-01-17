@@ -30,6 +30,7 @@ public class ConfigurationMapperService : Profile
 
     void EntityToResponse()
     {
+        CreateMap<Media, MediaResponse>();
         CreateMap<User, UserResponse>();
         CreateMap<SocialAccount, SocialAccountResponse>();
         CreateMap<Address, AddressResponse>();

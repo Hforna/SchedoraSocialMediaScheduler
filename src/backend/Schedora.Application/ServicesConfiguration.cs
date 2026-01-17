@@ -20,8 +20,9 @@ public static class ServicesConfiguration
         services.AddScoped<ISubscriptionService, SubscriptionService>();
         services.AddScoped<IStripeWebhookService, StripeWebhookService>();
         services.AddScoped<IPostService, PostService>();
-        
         services.AddScoped<IMediaService, MediaService>();
+
+        services.AddScoped<IMediaHandlerService, MediaHandlerService>();
     }
 
     static void AddMapper(IServiceCollection services)

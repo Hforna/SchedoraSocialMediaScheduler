@@ -73,12 +73,17 @@ builder.Services.AddSwaggerGen(options =>
     options.ExampleFilters();
 });
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = long.MaxValue;
+});
+
 builder.Services.AddRouting(d => d.LowercaseUrls = true);
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddDomain(builder.Configuration);
-builder.Services.AddWorkers(builder.Configuration);
+//builder.Services.AddWorkers(builder.Configuration);
 
 var tokenValidationParameters = new TokenValidationParameters()
 {
@@ -125,8 +130,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-var scheduler = app.Services.GetRequiredService<IWorkerScheduler>();
-scheduler.ScheduleWorks();
+//var scheduler = app.Services.GetRequiredService<IWorkerScheduler>();
+//scheduler.ScheduleWorks();
 
 //app.UseHttpsRedirection();
 

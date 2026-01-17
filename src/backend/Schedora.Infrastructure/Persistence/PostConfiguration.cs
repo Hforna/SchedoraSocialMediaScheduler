@@ -121,15 +121,8 @@ namespace Schedora.Infrastructure.Persistence
                     .IsRequired()
                     .HasMaxLength(100);
 
-                builder.Property(m => m.BlobUrl)
-                    .IsRequired()
+                builder.Property(m => m.ThumbnailName)
                     .HasMaxLength(500);
-
-                builder.Property(m => m.ThumbnailUrl)
-                    .HasMaxLength(500);
-
-                builder.Property(m => m.AspectRatio)
-                    .HasPrecision(5, 2);
 
                 builder.Property(m => m.Description)
                     .HasMaxLength(1000);

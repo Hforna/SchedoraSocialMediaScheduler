@@ -32,7 +32,9 @@ public class SocialAccountRepository : BaseRepository, ISocialAccountRepository
 
     public async Task<List<SocialAccount>> GetAllTwitterSocialAccounts()
     {
-        return await _context.SocialAccounts.Where(d => d.Platform == SocialPlatformsNames.Twitter).ToListAsync();
+        return await _context.SocialAccounts.Where(d => d.Platform == SocialPlatformsNames.Twitter)
+            .OrderBy(d => d.LastTokenRefreshAt)
+            .ToListAsync();
     }
 
     public async Task<List<SocialAccount>> GetSocialAccountsByIds(List<long> socialAccountIds)

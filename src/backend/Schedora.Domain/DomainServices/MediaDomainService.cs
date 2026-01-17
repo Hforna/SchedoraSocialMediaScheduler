@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Schedora.Domain.Exceptions;
 using Schedora.Domain.Interfaces;
 
 namespace Schedora.Domain.DomainServices;
@@ -7,6 +8,7 @@ namespace Schedora.Domain.DomainServices;
 public interface IMediaDomainService
 {
     public Task<DateTime?> GetTimeToMediaRetentEnds(long userId, Subscription subscription);
+    public Task ValidateUserUploadingMedia(User user, Subscription subscription, long fileSizeMb, MediaType mediaType, int? videoDuration = null);
 }
 
 public class MediaDomainService : IMediaDomainService
@@ -29,8 +31,21 @@ public class MediaDomainService : IMediaDomainService
         if (firstMedia is null)
             return null;
 
-        var timeRetent = DateTime.UtcNow.AddTicks(subscription.TotalTimeToStorageRetention().Ticks);
+        if (firstMedia.UploadedAt is null)
+            throw new InternalServiceException("It is not validate time to retention ends when uploaded is null");
+        
+        var timeRetent = subscription.GetRetentionEndDate((DateTime)firstMedia.UploadedAt);
 
         return timeRetent;
+    }
+
+    public async Task ValidateUserUploadingMedia(User user, Subscription subscription, 
+        long fileSizeMb, MediaType mediaType, int? videoDuration = null)
+    {
+        subscription.ValidateMediaUploading(fileSizeMb, mediaType, videoDuration);
+
+        var totalStoraged = await _uow.StorageRepository.GetTotalStorageUsedByUser(user.Id);
+
+        subscription.ValidateStorageLimit(fileSizeMb, totalStoraged);
     }
 }

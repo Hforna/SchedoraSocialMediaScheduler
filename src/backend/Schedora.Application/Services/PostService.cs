@@ -80,7 +80,7 @@ public class PostService : IPostService
 
         var postPlatforms = socialAccounts
             .Select(account =>
-            new PostPlatform(post.Id, account.Id, Enum.Parse<Platform>(account.Platform, true), post.Status))
+            new PostPlatform(post.Id, account.Id, Enum.Parse<Platform>(account.Platform, true)))
             .ToList();
             
         await _activityLogService.LogAsync(user.Id, ActivityActions.POST_CREATED, nameof(Post), post.Id, new

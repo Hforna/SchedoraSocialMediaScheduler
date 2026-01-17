@@ -25,4 +25,9 @@ public class MediaRepository : BaseRepository, IMediaRepository
     {
         return await _context.Media.Where(d => mediaIds.Contains(d.Id) && d.UserId == userId).ToListAsync();
     }
+
+    public async Task<MediaFolder?> GetMediaFolderByIdAndUser(long userId, long folderId)
+    {
+        return await _context.MediaFolders.SingleOrDefaultAsync(d => d.UserId == userId && d.Id == folderId);
+    }
 }

@@ -26,6 +26,19 @@ RUN dotnet publish "Schedora.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/publ
 
 COPY --from=build /src/Schedora.Infrastructure/EmailTemplates/ /app/publish/EmailTemplates/
 
+USER root
+RUN echo "Types: deb" > /etc/apt/sources.list.d/debian.sources && \
+    echo "URIs: http://deb.debian.org/debian" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Suites: bookworm bookworm-updates bookworm-security" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Components: main non-free non-free-firmware" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "deb http://deb.debian.org/debian bookworm main non-free non-free-firmware" > /etc/apt/sources.list.d/non-free.list && \
+    echo "deb http://deb.debian.org/debian bookworm-updates main non-free non-free-firmware" >> /etc/apt/sources.list.d/non-free.list && \
+    echo "deb http://security.debian.org/debian-security bookworm-security main non-free non-free-firmware" >> /etc/apt/sources.list.d/non-free.list && \
+    apt-get update -y && \
+    apt-get install -y --no-install-recommends ffmpeg && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .

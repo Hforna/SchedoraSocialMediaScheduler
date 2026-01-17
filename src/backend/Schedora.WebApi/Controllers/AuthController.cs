@@ -121,7 +121,7 @@ public class AuthController : ControllerBase
     /// <returns>OK if password is reset.</returns>
     /// <response code="200">Password updated.</response>
     /// <response code="400">Invalid token or email.</response>
-    [HttpPost("reset-password")]
+    [HttpPatch("reset-password")]
     [EndpointName("ResetPassword")]
     public async Task<IActionResult> ResetUserPassword([FromQuery]string token, [FromQuery]string email, [FromBody]ResetPasswordRequest request)
     {

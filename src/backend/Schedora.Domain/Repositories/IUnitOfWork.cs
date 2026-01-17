@@ -4,6 +4,7 @@ public interface IUnitOfWork
 {
     public IGenericRepository GenericRepository { get; set; }
     public IUserRepository UserRepository { get; set; }
+    public IStorageRepository StorageRepository { get; set; }
     public ISocialAccountRepository SocialAccountRepository { get; set; }
     public ITeamMemberRepository TeamMemberRepository { get; set; }
     public IMediaRepository MediaRepository { get; set; }

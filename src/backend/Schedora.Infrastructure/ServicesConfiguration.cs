@@ -69,6 +69,10 @@ public static class ServicesConfiguration
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IRequestService, RequestService>();
         services.AddScoped<IActivityLogService, ActivityLogService>();
+        services.AddScoped<IStorageService, TestClass>();
+        //services.AddScoped<IStorageService, DropboxStorageService>(d => new DropboxStorageService(
+            //configuration.GetValue<string>("services:storage:dropbox:apiKey"), 
+            //d.CreateScope().ServiceProvider.GetRequiredService<ILogger<DropboxStorageService>>()));
         
         services.AddScoped<IExternalOAuthAuthenticationService, TwitterExternalOAuthAuthenticationService>();
         services.AddScoped<IExternalOAuthAuthenticationService, LinkedInOAuthAuthenticationService>();
@@ -142,5 +146,6 @@ public static class ServicesConfiguration
         services.AddScoped<IMediaRepository, MediaRepository>();
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<ITeamMemberRepository, TeamMemberRepository>();
+        services.AddScoped<IStorageRepository, StorageRepository>();
     }
 }

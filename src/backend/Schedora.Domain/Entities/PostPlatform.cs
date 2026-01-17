@@ -23,12 +23,12 @@ namespace Schedora.Domain.Entities
         public DateTime? NextRetryAt { get; private set; }
         public DateTime? PublishedAt { get; private set; }
 
-        public PostPlatform(long postId, long socialAccountId, Platform platform, PostStatus status)
+        public PostPlatform(long postId, long socialAccountId, Platform platform)
         {
             PostId = postId;
             SocialAccountId = socialAccountId;
             Platform = platform;
-            Status = status;
+            Status = PostStatus.Pending;
         }
     }
 }
