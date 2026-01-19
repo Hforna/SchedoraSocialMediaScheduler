@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -10,6 +11,7 @@ using Schedora.Domain.Enums;
 using Schedora.Domain.Interfaces;
 using Schedora.Domain.Services;
 using Schedora.Infrastructure.Persistence;
+using Schedora.Workers;
 using Testcontainers.MsSql;
 
 namespace Schedora.IntegrationTests;
@@ -25,26 +27,29 @@ public class WebApplicationTests : WebApplicationFactory<Program>, IAsyncLifetim
     
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureAppConfiguration((hostingContext, config) =>
-        {
-            config.Sources.Clear();
+        base.ConfigureWebHost(builder);
+        var connectionString = _sqlContainer.GetConnectionString();
 
-            config
-                .AddJsonFile("appsettings.json", optional: true)
-                .AddJsonFile("appsettings.Test.json", optional: false)
+        builder.ConfigureAppConfiguration(d =>
+        {
+            d.Sources.Clear();
+
+            d.AddJsonFile("appsettings.json")
+                .AddJsonFile("appsettings.Test.json")
                 .AddEnvironmentVariables();
         });
         
         builder.ConfigureServices(services =>
         {
-            var db = services.FirstOrDefault(d => d.ServiceType == typeof(DataContext));
-
-            if (db != null)
-                services.RemoveAll(typeof(DataContext));
-
-            services.AddDbContext<DataContext>(options => options.UseSqlServer(_sqlContainer.GetConnectionString()));
+            services.RemoveAll<DbContextOptions<DataContext>>();
+            
+            services.RemoveAll<IBackgroundJobClient>();
+            services.RemoveAll<IRecurringJobManager>();
+            services.RemoveAll<JobStorage>();
+            services.RemoveAll<IWorkerScheduler>();
+            
+            services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
         });
-        base.ConfigureWebHost(builder);
     }
 
     public async Task SeedDataTest()

@@ -16,7 +16,7 @@ public class PostsController : ControllerBase
     {
         _postService = postService;
     }
-
+    
     [HttpPost]
     public async Task<IActionResult> CreatePost([FromBody]CreatePostRequest request)
     {

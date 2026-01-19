@@ -84,7 +84,8 @@ builder.Services.AddRouting(d => d.LowercaseUrls = true);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddDomain(builder.Configuration);
-//builder.Services.AddWorkers(builder.Configuration);
+if(builder.Configuration.GetValue<bool>("Workers:Enabled"))
+    builder.Services.AddWorkers(builder.Configuration);
 
 var tokenValidationParameters = new TokenValidationParameters()
 {
@@ -131,10 +132,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//var scheduler = app.Services.GetRequiredService<IWorkerScheduler>();
-//scheduler.ScheduleWorks();
+if (app.Configuration.GetValue<bool>("Workers:Enabled"))
+{
+    var scheduler = app.Services.GetRequiredService<IWorkerScheduler>();
+    scheduler.ScheduleWorks();   
+} 
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
