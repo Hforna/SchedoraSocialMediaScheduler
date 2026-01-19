@@ -4,7 +4,6 @@ EXPOSE 8080
 EXPOSE 8081
 
 FROM debian:bookworm AS ffmpeg-build
-
 RUN apt-get update && apt-get install -y \
     build-essential \
     yasm \
@@ -18,7 +17,6 @@ RUN apt-get update && apt-get install -y \
     ca-certificates
 
 WORKDIR /ffmpeg
-
 RUN git clone https://git.ffmpeg.org/ffmpeg.git . && \
     git checkout n7.0
 

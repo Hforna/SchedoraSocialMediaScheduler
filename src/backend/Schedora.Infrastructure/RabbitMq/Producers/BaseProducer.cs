@@ -7,7 +7,7 @@ namespace Schedora.Infrastructure.RabbitMq.Producers;
 
 public abstract class BaseProducer
 {
-    protected IConnection _connection;
+    protected readonly IConnection _connection;
     protected IChannel _channel;
     protected ILogger<BaseProducer> _logger;
 

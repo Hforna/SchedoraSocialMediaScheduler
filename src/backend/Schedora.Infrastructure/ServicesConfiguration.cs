@@ -18,11 +18,13 @@ using Schedora.Infrastructure.Externals.Services;
 using Schedora.Infrastructure.ExternalServices;
 using Schedora.Infrastructure.Persistence;
 using Schedora.Infrastructure.RabbitMq;
+using Schedora.Infrastructure.RabbitMq.Consumers;
 using Schedora.Infrastructure.RabbitMq.Producers;
 using Schedora.Infrastructure.Repositories;
 using Schedora.Infrastructure.Services;
 using Schedora.Infrastructure.Services.Cache;
 using Schedora.Infrastructure.Services.Cookies;
+using Schedora.Infrastructure.Services.Externals;
 using Schedora.Infrastructure.Services.ExternalServicesConfigs;
 using Schedora.Infrastructure.Services.Payment;
 using Schedora.Infrastructure.Services.Sessions;
@@ -78,6 +80,8 @@ public static class ServicesConfiguration
         services.AddScoped<IExternalOAuthAuthenticationService, TwitterExternalOAuthAuthenticationService>();
         services.AddScoped<IExternalOAuthAuthenticationService, LinkedInOAuthAuthenticationService>();
         services.AddScoped<IOAuthTokenService, TwitterExternalOAuthAuthenticationService>();
+        services.Configure<TwitterValidationRules>(configuration.GetSection("Twitter:Rules"));
+        
         
         services.AddScoped<ILinkedInService, LinkedInService>();
         services.AddScoped<IPkceService, PkceService>();
@@ -154,12 +158,13 @@ public static class ServicesConfiguration
     
     static void AddProducers(IServiceCollection services)
     {
-        services.AddSingleton<ISocialAccountProducer, SocialAccountProducer>();
+        services.AddScoped<ISocialAccountProducer, SocialAccountProducer>();
+        services.AddScoped<IPostProducer, PostProducer>();
     }
 
     static void AddConsumers(IServiceCollection services)
     {
-        
+        services.AddHostedService<PostValidationConsumer>();
     }
 
     static void AddRepositories(IServiceCollection services)

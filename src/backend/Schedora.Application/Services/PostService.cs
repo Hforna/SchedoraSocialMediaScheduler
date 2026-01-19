@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.Features;
 using Schedora.Domain.DomainServices;
+using Schedora.Domain.RabbitMq.Producers;
 using SocialScheduler.Domain.Constants;
 
 namespace Schedora.Application.Services;
@@ -7,17 +8,18 @@ namespace Schedora.Application.Services;
 public interface IPostService
 {
     public Task<PostResponse> CreatePost(CreatePostRequest request);
-    public Task<PostValidationResponse> ValidatePost(ValidatePostRequest request);
+    public Task ValidatePost(long postId);
 }
 
 public class PostService : IPostService
 {
     public PostService(IMapper mapper, ICurrentUserService currentUser, 
         IPostDomainService postDomainService, IUnitOfWork uow, 
-        IMediaService mediaService, IActivityLogService activityLogService)
+        IMediaService mediaService, IActivityLogService activityLogService, IPostProducer  postProducer)
     {
         _mapper = mapper;
         _currentUser = currentUser;
+        _postProducer = postProducer;
         _postDomainService = postDomainService;
         _uow = uow;
         _mediaService = mediaService;
@@ -25,6 +27,7 @@ public class PostService : IPostService
     }
 
     private readonly IMapper _mapper;
+    private readonly IPostProducer _postProducer;
     private readonly ICurrentUserService  _currentUser;
     private readonly IPostDomainService _postDomainService;
     private readonly IUnitOfWork _uow;
@@ -93,6 +96,13 @@ public class PostService : IPostService
         await _uow.GenericRepository.AddRange<PostMedia>(postMedias);
         await _uow.Commit();
 
+        await _postProducer.SendPostCreated(post.Id);
+
         return _mapper.Map<PostResponse>(post);
+    }
+
+    public async Task ValidatePost(long postId)
+    {
+        
     }
 }

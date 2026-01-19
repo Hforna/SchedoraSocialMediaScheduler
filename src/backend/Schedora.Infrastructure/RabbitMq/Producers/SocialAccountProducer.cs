@@ -24,6 +24,6 @@ public class SocialAccountProducer : BaseProducer, ISocialAccountProducer
         var serialize = JsonSerializer.Serialize(dto);
         var dtoBytes = Encoding.UTF8.GetBytes(serialize);
 
-        await _channel.BasicPublishAsync("schedora.social.events", "socialaccount.connected", dtoBytes);
+        await _channel.BasicPublishAsync("schedora.social.events", "social-account.connected", dtoBytes);
     }
 }
