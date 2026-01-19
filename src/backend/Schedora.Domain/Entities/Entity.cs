@@ -5,8 +5,7 @@ namespace Schedora.Domain.Entities;
 public abstract class Entity : IEntity
 {
     public long Id { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 
