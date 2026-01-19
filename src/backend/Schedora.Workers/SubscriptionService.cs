@@ -8,7 +8,7 @@ namespace Schedora.Workers;
 
 public interface ISubscriptionService
 {
-    Task HandleSubscriptionsCancellations();
+    public Task HandleSubscriptionsCancellations();
 }
 
 public class SubscriptionService : ISubscriptionService

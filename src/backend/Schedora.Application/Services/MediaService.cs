@@ -36,12 +36,12 @@ public class MediaService : IMediaService
         
         var mediaStream = request.Media.OpenReadStream();
         
-        var isMediaValid = await _mediaHandlerService.IsMediaValid(mediaStream);
+        var isMediaValid = await _mediaHandlerService.IsValid(mediaStream);
         if(!isMediaValid)
             throw new RequestException("Invalid media type");
         
-        var mediaExtension = _mediaHandlerService.GetMediaExtension(request.Media.FileName);
-        var mediaType = await _mediaHandlerService.GetMediaType(mediaStream);
+        var mediaExtension = _mediaHandlerService.GetExtension(request.Media.FileName);
+        var mediaType = await _mediaHandlerService.GetType(mediaStream);
         var mimeType = request.Media.ContentType;
         var mediaInfos = await GetMediaInfos(mediaStream, mediaType);
         
@@ -51,6 +51,7 @@ public class MediaService : IMediaService
         var mediaName = DefineMediaName(request.MediaName, mediaExtension);
         
         var mediaBuilder = new MediaBuilder(user.Id, mediaName, mediaInfos.Size, mimeType, "");
+        mediaBuilder.WithDescription(request.Description);
         mediaBuilder.WithDuration(mediaInfos.Duration);
         mediaBuilder.WithDimensions(mediaInfos.Width,  mediaInfos.Height);
         mediaBuilder.WithOriginalFileName(mediaOriginalName);
@@ -66,7 +67,7 @@ public class MediaService : IMediaService
             if (request.Thumbnail is not null)
             {
                 var thumbnail = request.Thumbnail.OpenReadStream();
-                var (isImage, ext) = _mediaHandlerService.ValidateImage(thumbnail);
+                var isImage= await _mediaHandlerService.IsValid(thumbnail);
                 
                 if (!isImage)
                     throw new RequestException("Invalid image type");
@@ -104,7 +105,7 @@ public class MediaService : IMediaService
         if(type == MediaType.VIDEO)
             videoDuration = await _mediaHandlerService.GetTotalVideoDuration(media);
         var mediaSize = _mediaHandlerService.GetMegaBytesSizeFromFile(media);
-        var mediaDimensions = await _mediaHandlerService.GetMediaDimensions(media, type);
+        var mediaDimensions = await _mediaHandlerService.GetDimensions(media, type);
 
         return new MediaInfosDto()
         {

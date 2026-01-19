@@ -23,6 +23,11 @@ public static class ServicesConfiguration
         services.AddScoped<IMediaService, MediaService>();
 
         services.AddScoped<IMediaHandlerService, MediaHandlerService>();
+        services.AddScoped<IVideoProcessor, FFmpegProcessor>();
+        services.AddScoped<IImageProcessor, ImageProcessor>();
+
+        var ffmpegPath = "/usr/bin";
+        Xabe.FFmpeg.FFmpeg.SetExecutablesPath(ffmpegPath);
     }
 
     static void AddMapper(IServiceCollection services)

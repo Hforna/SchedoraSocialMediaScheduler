@@ -17,6 +17,7 @@ public static class WorkersConfiguration
         services.AddHangfireServer();
         
         services.AddTransient<RefreshTokenService>();
+        services.AddTransient<ISubscriptionService, SubscriptionService>();
         services.AddTransient<IWorkerScheduler, WorkerScheduler>();
     }
 }

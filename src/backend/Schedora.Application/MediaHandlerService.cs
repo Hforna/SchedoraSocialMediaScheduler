@@ -1,9 +1,10 @@
 using System.Net.Mime;
-using FFMediaToolkit.Decoding;
-using FFmpeg.AutoGen;
 using FileTypeChecker.Extensions;
 using FileTypeChecker.Types;
+using Schedora.Application.Services;
+using Schedora.Domain.Dtos;
 using SixLabors.ImageSharp;
+using Xabe.FFmpeg;
 
 namespace Schedora.Application;
 
@@ -11,129 +12,175 @@ public interface IMediaHandlerService
 {
     public long GetMegaBytesSizeFromFile(Stream file);
     public Task<int> GetTotalVideoDuration(Stream video);
-    public string GetMediaExtension(string fileName);
-    public Task<MediaType> GetMediaType(Stream media);
-    public Task<bool> IsMediaValid(Stream media);
-    public Task<string> GetMediaFullName(Stream media);
-    public (bool isImage, string ext) ValidateImage(Stream file);
-    public Task<(int width, int height)> GetMediaDimensions(Stream media, MediaType type);
+    public string GetExtension(string fileName);
+    public Task<MediaType> GetType(Stream media);
+    public Task<bool> IsValid(Stream media);
+    public Task<(int width, int height)> GetDimensions(Stream media, MediaType type);
 }
 
 public class MediaHandlerService : IMediaHandlerService
 {
+    private readonly IVideoProcessor _videoProcessor;
+    private readonly IImageProcessor _imageProcessor;
+
+    public MediaHandlerService(IVideoProcessor videoProcessor, IImageProcessor imageProcessor)
+    {
+        _videoProcessor = videoProcessor;
+        _imageProcessor = imageProcessor;
+    }
+
     public long GetMegaBytesSizeFromFile(Stream file) => file.Length / 1000000;
     public async Task<int> GetTotalVideoDuration(Stream video)
     {
         return 2;
     }
-    
-    public (bool isImage, string ext) ValidateImage(Stream file)
-    {
-        (bool isImage, string ext) = (false, "");
 
-        if (file.Is<JointPhotographicExpertsGroup>())
-        {
-            (isImage, ext) = (true, GetExtension(JointPhotographicExpertsGroup.TypeExtension));
-        } else if(file.Is<PortableNetworkGraphic>())
-        {
-            (isImage, ext) = (true, GetExtension(PortableNetworkGraphic.TypeExtension));
-        }
-
-        file.Position = 0;
-
-        return (isImage, ext);
-    }
-
-    public async Task<(int width, int height)> GetMediaDimensions(Stream media, MediaType type)
+    public async Task<(int width, int height)> GetDimensions(Stream media, MediaType type)
     {
         int height = 0, width = 0;
-        
+
         if (type == MediaType.VIDEO)
         {
-            var mediaInfo = MediaFile.Open(media);
-        
-            if(!mediaInfo.HasAudio)
-                throw new DomainException("Media type not ");
-
-            var size = mediaInfo.Video.Info.FrameSize;
-        
-            return (size.Width, size.Height);   
+            var videoInfos = await _videoProcessor.GetVideoInfos(media);
+            width = videoInfos.Width;
+            height = videoInfos.Height;
         }
         if (type == MediaType.IMAGE)
-        {
-            try
-            {
-                var imageInfos = await Image.LoadAsync(media);
-                height = imageInfos.Height; width = imageInfos.Width;
-            }
-            catch (Exception e)
-            {
-                throw new InternalServiceException("It was not possible process media of type image");
-            }
-        }
-
+            (height, width) = await _imageProcessor.GetDimensions(media);
+            
         return (width, height);
     }
 
-    private string GetExtension(string extension)
-    {
-        return extension.StartsWith(".") ? extension : $".{extension}";
-    }
+    public string GetExtension(string fileName) => Path.GetExtension(fileName);
 
-    public string GetMediaExtension(string fileName) => Path.GetExtension(fileName);
-    
-    private bool IsValidImage(Stream file)
+    public async Task<MediaType> GetType(Stream media)
     {
-        try
-        {
-            using var image = Image.Load(file);
-            file.Position = 0;
-            
-            return true;
-        }
-        catch (Exception e)
-        {
-            file.Position = 0;
-            
-            return false;
-        }
-    }
-
-    private async Task<bool> IsValidVideo(Stream file)
-    {
-        var isValid = false;
+        var validateImage = _imageProcessor.IsValid(media);
         
-        var tempFilePath = Path.GetTempFileName();
-        
-        using var video = File.Create(tempFilePath);
-        await file.CopyToAsync(video);
-
-        using var media = MediaFile.Open(video);
-        if (media.HasVideo)
-            isValid = true;
-        
-        file.Position = 0;
-        
-        return isValid;
-    }
-
-    public async Task<MediaType> GetMediaType(Stream media)
-    {
-        if (IsValidImage(media))
+        if (validateImage)
             return MediaType.IMAGE;
-        if(await IsValidVideo(media))
+        if(await _videoProcessor.IsVideoValid(media))
             return MediaType.VIDEO;
         
         throw new DomainException("Media type not supported");
     }
 
-    public async Task<bool> IsMediaValid(Stream media)
+    public async Task<bool> IsValid(Stream media)
     {
-        return IsValidImage(media) || await IsValidVideo(media);
+        var validateImage = _imageProcessor.IsValid(media);
+        
+        return validateImage || await _videoProcessor.IsVideoValid(media);
+    }
+}
+
+public abstract class MediaBaseProcessor
+{
+    public void ResetStream(Stream media)
+    {
+        if(media.CanSeek)
+            media.Position = 0;
+    }
+}
+
+public interface IVideoProcessor
+{
+    public Task<bool> IsVideoValid(Stream media);
+    public Task<VideoInfosDto> GetVideoInfos(Stream media);
+}
+
+public class FFmpegProcessor : MediaBaseProcessor, IVideoProcessor
+{
+    private async Task<(FileStream file, string tempPath)> CreateTempFile(Stream file)
+    {
+        var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mp4");
+        var tempFile = File.Create(tempPath);
+        
+        await file.CopyToAsync(tempFile);
+        
+        return (tempFile, tempPath);
+    }
+    
+    public async Task<bool> IsVideoValid(Stream media)
+    {
+        var infos = await GetProcessorMediaInfos(media);
+
+        return infos.VideoStreams.Any();
     }
 
-    public Task<string> GetMediaFullName(Stream media)
+    public async Task<VideoInfosDto> GetVideoInfos(Stream media)
     {
-        throw new NotImplementedException();
+        var infos = await GetProcessorMediaInfos(media);
+        
+        var videoStreams = infos.VideoStreams.FirstOrDefault();
+            
+        if(videoStreams is null)
+            throw new InternalServiceException("There has occurred and error while trying to get media infos");
+            
+        var videoInfos = new VideoInfosDto()
+        {
+            Duration = infos.Duration.Seconds,
+            Height = videoStreams.Height,
+            Width  = videoStreams.Width
+        };
+
+        return videoInfos;
+    }
+
+    private async Task<IMediaInfo> GetProcessorMediaInfos(Stream media)
+    {
+        var (file, filePath) = await CreateTempFile(media);
+
+        try
+        {
+            var infos = await Xabe.FFmpeg.FFmpeg.GetMediaInfo(filePath);
+
+            return infos;
+        }
+        catch(Exception e)
+        {
+            throw new InternalServiceException("It was not possible to get media infos from file");
+        }
+        finally
+        {
+            ResetStream(media);
+            await file.DisposeAsync();
+        }
+    }
+}
+
+public interface IImageProcessor
+{
+    public bool IsValid(Stream file);
+    public Task<(int width, int height)> GetDimensions(Stream media);
+}
+
+public class ImageProcessor : MediaBaseProcessor, IImageProcessor
+{
+    public bool IsValid(Stream media)
+    {
+        bool isImage = false;
+
+        if (media.Is<JointPhotographicExpertsGroup>())
+            isImage = true;
+        if (media.Is<PortableNetworkGraphic>())
+            isImage = true;
+
+        ResetStream(media);
+        
+        return isImage;
+    }
+
+    public async Task<(int width, int height)> GetDimensions(Stream media)
+    {
+        try
+        {
+            var imageInfos = await Image.LoadAsync(media);
+            
+            return (imageInfos.Width, imageInfos.Height);
+        }
+        catch (Exception e)
+        {
+            throw new InternalServiceException("It was not possible process media of type image");
+        }
     }
 }
