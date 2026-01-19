@@ -9,30 +9,14 @@ using Schedora.Domain.RabbitMq.Producers;
 
 namespace Schedora.Infrastructure.RabbitMq.Producers;
 
-public class SocialAccountProducer : ISocialAccountProducer
+public class SocialAccountProducer : BaseProducer, ISocialAccountProducer
 {
-    private IConnection _connection;
-    private IChannel _channel;
-    private readonly RabbitMqConnection  _rabbitMqConnection;
-    private readonly ILogger<SocialAccountProducer> _logger;
-
-    public SocialAccountProducer(IOptions<RabbitMqConnection> rabbitMqConnection, ILogger<SocialAccountProducer> logger)
+    public SocialAccountProducer(IConnection connection, ILogger<SocialAccountProducer> logger) : base(connection, logger)
     {
-        _rabbitMqConnection = rabbitMqConnection.Value;
-        _logger = logger;
     }
-
 
     public async Task SendAccountConnected(SocialAccountConnectedDto dto)
     {
-        _connection = await new ConnectionFactory()
-        {
-            Port = _rabbitMqConnection.Port,
-            HostName = _rabbitMqConnection.Host,
-            UserName = _rabbitMqConnection.UserName,
-            Password = _rabbitMqConnection.Password,
-        }.CreateConnectionAsync();
-
         _channel = await _connection.CreateChannelAsync();
         
         await _channel.ExchangeDeclareAsync("schedora.social.events", ExchangeType.Direct, true, false);

@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using RabbitMQ.Client;
 using Schedora.Domain.Entities;
 using Schedora.Domain.Interfaces;
 using Schedora.Domain.RabbitMq.Producers;
@@ -32,13 +34,12 @@ namespace Schedora.Infrastructure;
 
 public static class ServicesConfiguration
 {
-    public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static async Task AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         AddDbContext(services, configuration);
         AddServices(services, configuration);
         AddRepositories(services);
-        AddProducers(services, configuration);
-        AddConsumers(services);
+        await AddRabbitMq(services, configuration);
         AddRedis(services, configuration);
     }
 
@@ -127,7 +128,31 @@ public static class ServicesConfiguration
         services.AddScoped<ISocialAccountCache, SocialAccountCache>();
     }
 
-    static void AddProducers(IServiceCollection services, IConfiguration configuration)
+    static async Task AddRabbitMq(IServiceCollection services, IConfiguration configuration)
+    {
+        var rabbitMqConnection = new RabbitMqConnection()
+        {
+            Host = configuration.GetValue<string>("RabbitMq:host"),
+            UserName = configuration.GetValue<string>("RabbitMq:UserName"),
+            Password = configuration.GetValue<string>("RabbitMq:Password"),
+            Port = configuration.GetValue<int>("RabbitMq:Port"),
+        };
+
+        var connection = await new ConnectionFactory()
+        {
+            HostName = rabbitMqConnection.Host,
+            Port = rabbitMqConnection.Port,
+            UserName = rabbitMqConnection.UserName,
+            Password = rabbitMqConnection.Password,
+        }.CreateConnectionAsync();
+
+        services.AddSingleton<IConnection>(connection);
+        
+        AddProducers(services);
+        AddConsumers(services);
+    }
+    
+    static void AddProducers(IServiceCollection services)
     {
         services.AddSingleton<ISocialAccountProducer, SocialAccountProducer>();
     }

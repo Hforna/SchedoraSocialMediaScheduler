@@ -7,6 +7,7 @@ namespace Schedora.Application.Services;
 public interface IPostService
 {
     public Task<PostResponse> CreatePost(CreatePostRequest request);
+    public Task<PostValidationResponse> ValidatePost(ValidatePostRequest request);
 }
 
 public class PostService : IPostService

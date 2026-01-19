@@ -18,3 +18,10 @@ public class MediaPostRequest
     public int OrderIndex { get; set; }
     public string AltText { get; set; }
 }
+
+public class ValidatePostRequest
+{
+    public string Content { get; set; }
+    public List<MediaPostRequest> Medias  { get; set; }
+    public List<long> SocialAccountsIds { get; set; }
+}

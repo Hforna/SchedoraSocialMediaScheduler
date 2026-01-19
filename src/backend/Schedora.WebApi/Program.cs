@@ -81,7 +81,7 @@ builder.WebHost.ConfigureKestrel(options =>
 
 builder.Services.AddRouting(d => d.LowercaseUrls = true);
 
-builder.Services.AddInfrastructure(builder.Configuration);
+await builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddDomain(builder.Configuration);
 if(builder.Configuration.GetValue<bool>("Workers:Enabled"))

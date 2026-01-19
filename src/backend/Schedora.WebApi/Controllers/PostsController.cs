@@ -16,9 +16,9 @@ public class PostsController : ControllerBase
     {
         _postService = postService;
     }
-    
+
     [HttpPost]
-    public async Task<IActionResult> CreatePost([FromBody]CreatePostRequest request)
+    public async Task<IActionResult> CreatePost([FromBody] CreatePostRequest request)
     {
         var result = await _postService.CreatePost(request);
 
