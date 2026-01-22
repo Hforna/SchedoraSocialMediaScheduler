@@ -4,5 +4,5 @@ namespace Schedora.Domain.Services;
 
 public interface IMediaRulesValidator
 {
-    public void Validate(IEnumerable<MediaDescriptorDto> medias);
+    public (bool isValid, string? errors) IsValid(IEnumerable<MediaDescriptorDto> medias);
 }

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using RabbitMQ.Client;
 using Schedora.Domain.Entities;
 using Schedora.Domain.Enums;
 using Schedora.Domain.Interfaces;
@@ -13,6 +14,7 @@ using Schedora.Domain.Services;
 using Schedora.Infrastructure.Persistence;
 using Schedora.Workers;
 using Testcontainers.MsSql;
+using Testcontainers.RabbitMq;
 
 namespace Schedora.IntegrationTests;
 
@@ -20,6 +22,9 @@ public class WebApplicationTests : WebApplicationFactory<Program>, IAsyncLifetim
 {
     private readonly MsSqlContainer _sqlContainer = new MsSqlBuilder()
         .WithImage("mcr.microsoft.com/mssql/server:2019-latest")
+        .Build();
+
+    private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder("rabbitmq:3-management")
         .Build();
     
     public DataContext? DbContext { get; set; }
@@ -47,7 +52,15 @@ public class WebApplicationTests : WebApplicationFactory<Program>, IAsyncLifetim
             services.RemoveAll<IRecurringJobManager>();
             services.RemoveAll<JobStorage>();
             services.RemoveAll<IWorkerScheduler>();
-            
+            services.RemoveAll<IConnection>();
+
+            services.AddSingleton<IConnection>(d => new ConnectionFactory()
+            {
+                HostName = _rabbitMqContainer.Hostname,
+                Port = _rabbitMqContainer.GetMappedPublicPort(),
+                Password = "guest",
+                UserName = "guest",
+            }.CreateConnectionAsync().Result);
             services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
         });
     }

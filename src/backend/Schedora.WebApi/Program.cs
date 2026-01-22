@@ -114,8 +114,6 @@ builder.Services.AddAuthentication(opt =>
 
 builder.Services.AddScoped<ILinkHelper, LinkHelper>();
 
-builder.Services.Configure<RabbitMqConnection>(builder.Configuration.GetSection("RabbitMq"));
-
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddHttpClient();
