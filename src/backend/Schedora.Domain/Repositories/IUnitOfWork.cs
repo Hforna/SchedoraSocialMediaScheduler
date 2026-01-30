@@ -8,6 +8,7 @@ public interface IUnitOfWork
     public ISocialAccountRepository SocialAccountRepository { get; set; }
     public ITeamMemberRepository TeamMemberRepository { get; set; }
     public IMediaRepository MediaRepository { get; set; }
+    public IPostRepository PostRepository { get; set; }
     public ISubscriptionRepository SubscriptionRepository { get; set; }
     public Task Commit();
 }

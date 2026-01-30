@@ -30,4 +30,12 @@ public class MediaRepository : BaseRepository, IMediaRepository
     {
         return await _context.MediaFolders.SingleOrDefaultAsync(d => d.UserId == userId && d.Id == folderId);
     }
+
+    public async Task<List<Media>> GetPostMedias(long postId)
+    {
+        return await _context.PostMedias.Include(d => d.Media)
+            .Where(d => d.PostId == postId)
+            .Select(d => d.Media)
+            .ToListAsync()!;
+    }
 }

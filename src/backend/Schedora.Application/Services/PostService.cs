@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.Features;
 using Schedora.Domain.DomainServices;
+using Schedora.Domain.Dtos;
 using Schedora.Domain.RabbitMq.Producers;
 using SocialScheduler.Domain.Constants;
 
@@ -8,32 +9,23 @@ namespace Schedora.Application.Services;
 public interface IPostService
 {
     public Task<PostResponse> CreatePost(CreatePostRequest request);
-    public Task ValidatePost(long postId);
+    public Task<List<PostValidationResponseDto>> ValidatePost(long postId);
 }
 
-public class PostService : IPostService
+public class PostService(
+    IMapper _mapper,
+    ICurrentUserService _currentUser,
+    IPostDomainService _postDomainService,
+    IUnitOfWork _uow,
+    IMediaService _mediaService,
+    IActivityLogService _activityLogService,
+    IPostProducer _postProducer,
+    IEnumerable<IMediaValidationEngine> _mediaValidationEngines,
+    ILogger<IPostService> _logger, 
+    IEnumerable<IContentValidatorEngine> _contentValidatorEngine)
+    : IPostService
 {
-    public PostService(IMapper mapper, ICurrentUserService currentUser, 
-        IPostDomainService postDomainService, IUnitOfWork uow, 
-        IMediaService mediaService, IActivityLogService activityLogService, IPostProducer  postProducer)
-    {
-        _mapper = mapper;
-        _currentUser = currentUser;
-        _postProducer = postProducer;
-        _postDomainService = postDomainService;
-        _uow = uow;
-        _mediaService = mediaService;
-        _activityLogService = activityLogService;
-    }
 
-    private readonly IMapper _mapper;
-    private readonly IPostProducer _postProducer;
-    private readonly ICurrentUserService  _currentUser;
-    private readonly IPostDomainService _postDomainService;
-    private readonly IUnitOfWork _uow;
-    private readonly IMediaService _mediaService;
-    private readonly IActivityLogService  _activityLogService;
-    
     public async Task<PostResponse> CreatePost(CreatePostRequest request)
     {
         var user = await _currentUser.GetUser();
@@ -84,7 +76,7 @@ public class PostService : IPostService
 
         var postPlatforms = socialAccounts
             .Select(account =>
-            new PostPlatform(post.Id, account.Id, Enum.Parse<Platform>(account.Platform, true)))
+            new PostPlatform(post.Id, account.Id, account.Platform))
             .ToList();
             
         await _activityLogService.LogAsync(user.Id, ActivityActions.POST_CREATED, nameof(Post), post.Id, new
@@ -101,8 +93,94 @@ public class PostService : IPostService
         return _mapper.Map<PostResponse>(post);
     }
 
-    public async Task ValidatePost(long postId)
+    public async Task<List<PostValidationResponseDto>> ValidatePost(long postId)
     {
+        var post = await _uow.PostRepository.GetPostById(postId)
+            ?? throw new NotFoundException("Post not found");
+
+        var postValidationResponses = new List<PostValidationResponseDto>();
         
+        var postPlatforms = post.Platforms.Select(d => d.Platform).Distinct();
+
+        var postMedias = await _uow.MediaRepository.GetPostMedias(postId);
+        if (postMedias.Any())
+        {
+            var validateMedias = ValidatePostMedias(postMedias, postPlatforms);   
+            postValidationResponses.AddRange(validateMedias);
+        }
+
+        if (!string.IsNullOrEmpty(post.Content))
+        {
+            var validateContent = ValidatePostContent(post, postPlatforms);
+            postValidationResponses.AddRange(validateContent);   
+        }
+
+        postValidationResponses = postValidationResponses.GroupBy(d => d.Platform)
+            .Select(val =>
+            {
+                var validationDtos = val.AsEnumerable();
+                var errors = validationDtos.Select(d => d.Errors);
+                var isNotValid = val.Any(d => !d.IsValid);
+                
+                return new PostValidationResponseDto()
+                {
+                    Errors = string.Join('\n', errors),
+                    Platform = val.Key,
+                    IsValid = isNotValid
+                };
+            }).ToList();
+
+        return postValidationResponses;
+    }
+
+    private List<PostValidationResponseDto> ValidatePostMedias(List<Media> postMedias, IEnumerable<string> postPlatforms)
+    {
+        var postValidationResponses = new List<PostValidationResponseDto>();
+        
+        var mediaEngines = _mediaValidationEngines.Where(d => postPlatforms.Contains(d.Platform));
+        if (mediaEngines.Any())
+        {
+            var mediasDescriptor = postMedias.Select(media => 
+                new MediaDescriptorDto(media.Type, media.FileSize, media.Format, media.Duration, media.Width, media.Height));
+            foreach (var mediaEngine in mediaEngines)
+            {
+                var (isValid, errors) = mediaEngine.IsValid(mediasDescriptor!);
+
+                var postValidationResponse = new PostValidationResponseDto()
+                {
+                    Errors = errors,
+                    Platform = mediaEngine.Platform,
+                    IsValid = isValid,
+                };
+                postValidationResponses.Add(postValidationResponse);
+            }
+        }
+
+        return postValidationResponses;
+    }
+
+    private List<PostValidationResponseDto> ValidatePostContent(Post post, IEnumerable<string>  postPlatforms)
+    {
+        var validatorEngines = _contentValidatorEngine.Where(d => postPlatforms.Contains(d.Platform));
+    
+        var validationResponses = new List<PostValidationResponseDto>();
+        
+        if(!validatorEngines.Any())
+            return validationResponses;
+        
+        foreach (var engine in validatorEngines)
+        {
+            var validate = engine.Validate(post.Content);
+
+            var validationDto = new PostValidationResponseDto()
+            {
+                Platform = engine.Platform,
+                IsValid = validate.IsValid,
+                Errors = validate.Errors
+            };
+            validationResponses.Add(validationDto);
+        }
+
+        return validationResponses;
     }
 }

@@ -11,7 +11,7 @@ namespace Schedora.Domain.Entities
     {
         public long PostId { get; private set; }
         public long SocialAccountId { get; private set; }
-        public Platform Platform { get; private set; }
+        public string Platform { get; private set; }
         public PostStatus Status { get; private set; }
         public string? PlatformPostId { get; private set; }
         public string? PlatformPostUrl { get; private set; }
@@ -23,7 +23,7 @@ namespace Schedora.Domain.Entities
         public DateTime? NextRetryAt { get; private set; }
         public DateTime? PublishedAt { get; private set; }
 
-        public PostPlatform(long postId, long socialAccountId, Platform platform)
+        public PostPlatform(long postId, long socialAccountId, string platform)
         {
             PostId = postId;
             SocialAccountId = socialAccountId;

@@ -6,4 +6,5 @@ public interface IMediaRepository
     public Task<Media?> GetFirstUserMedia(long userId);
     public Task<List<Media>> GetMediasByIds(List<long> mediaIds, long userId);
     public Task<MediaFolder?> GetMediaFolderByIdAndUser(long userId, long folderId);
+    public Task<List<Media>> GetPostMedias(long postId);
 }

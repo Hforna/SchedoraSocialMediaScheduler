@@ -14,11 +14,11 @@ namespace Schedora.Domain.Entities
             internal string MimeType;
             internal string BlobUrl;
             internal DateTime UploadedAt;
-
+            internal MediaType MediaType;
             internal string? OriginalFileName;
             internal string? ThumbnailUrl;
-            internal int? Width;
-            internal int? Height;
+            internal int Width;
+            internal int Height;
             internal int? Duration;
             internal decimal? AspectRatio;
             internal long? FolderId;
@@ -31,9 +31,11 @@ namespace Schedora.Domain.Entities
             internal int UsageCount;
             internal DateTime? LastUsedAt;
 
-            public MediaBuilder(long userId, string fileName, long fileSize, string mimeType, string blobUrl)
+            public MediaBuilder(long userId, string fileName, long fileSize, 
+                string mimeType, string blobUrl, MediaType type, int width, int height)
             {
                 UserId = userId;
+                MediaType = type;
                 FileName = fileName;
                 FileSize = fileSize;
                 MimeType = mimeType;
@@ -44,7 +46,6 @@ namespace Schedora.Domain.Entities
 
             public MediaBuilder WithOriginalFileName(string? value) { OriginalFileName = value; return this; }
             public MediaBuilder WithThumbnailName(string? value) { ThumbnailUrl = value; return this; }
-            public MediaBuilder WithDimensions(int? width, int? height) { Width = width; Height = height; return this; }
             public MediaBuilder WithDuration(int? value) { Duration = value; return this; }
             public MediaBuilder WithAspectRatio(decimal? value) { AspectRatio = value; return this; }
             public MediaBuilder WithFolder(long? value) { FolderId = value; return this; }
@@ -106,13 +107,15 @@ namespace Schedora.Domain.Entities
         public long FileSize { get; private set; }
         public string MimeType { get; private set; }
         public string? ThumbnailName { get; private set; }
-        public int? Width { get; private set; }
-        public int? Height { get; private set; }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
         public int? Duration { get; private set; }
         public long? FolderId { get; private set; }
         public string? Tags { get; private set; }
         public string? Description { get; private set; }
         public bool IsProcessed { get; private set; }
+        public MediaType Type { get; set; }
+        public string Format { get; set; }
         public ProcessingStatus ProcessingStatus { get; private set; }
         public string? ProcessingErrorMessage { get; private set; }
         public string? Hash { get; private set; } 

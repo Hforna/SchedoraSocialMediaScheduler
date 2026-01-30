@@ -21,7 +21,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> CreatePost([FromBody] CreatePostRequest request)
     {
         var result = await _postService.CreatePost(request);
-
+        
         return Created(string.Empty, result);
     }
 }

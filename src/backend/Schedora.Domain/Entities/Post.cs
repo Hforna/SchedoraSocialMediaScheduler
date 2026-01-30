@@ -26,6 +26,7 @@ namespace Schedora.Domain.Entities
         public DateTime? ApprovedAt { get; private set; }
         public ApprovalStatus ApprovalStatus { get; private set; }
         public string? RejectionReason { get; private set; }
+        public IEnumerable<PostPlatform> Platforms { get; set; }
 
         public static Post Create(string content, long userId, PostStatus status, long createdBy, string scheduledTimezone,
             long? templateId = null, string? notes = null)

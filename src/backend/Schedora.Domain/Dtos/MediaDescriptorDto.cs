@@ -2,6 +2,16 @@ namespace Schedora.Domain.Dtos;
 
 public class MediaDescriptorDto
 {
+    public MediaDescriptorDto(MediaType type, long sizeInMb, string format, int? durationSeconds, int width, int height)
+    {
+        Type = type;
+        SizeInMb = sizeInMb;
+        Format = format;
+        DurationSeconds = durationSeconds;
+        Width = width;
+        Height = height;
+    }
+
     public MediaType Type;
     public long SizeInMb;
     public string Format;

@@ -26,6 +26,7 @@ using Schedora.Infrastructure.Services.Cache;
 using Schedora.Infrastructure.Services.Cookies;
 using Schedora.Infrastructure.Services.Externals;
 using Schedora.Infrastructure.Services.Externals.Validation;
+using Schedora.Infrastructure.Services.Externals.Validation.Engines;
 using Schedora.Infrastructure.Services.ExternalServicesConfigs;
 using Schedora.Infrastructure.Services.Payment;
 using Schedora.Infrastructure.Services.Sessions;
@@ -88,7 +89,10 @@ public static class ServicesConfiguration
         services.AddTransient<MediaValidationHandler, TwitterMediaDimensionsValidationHandler>();
         services.AddTransient<MediaValidationHandler, TwitterMediaSizeValidationHandler>();
         services.AddTransient<MediaValidationHandler, TwitterFormatsValidationHandler>();
+        services.AddTransient<ContentValidationHandler, TwitterContentLengthValidationHandler>();
         
+        services.AddTransient<IMediaValidationEngine, TwitterMediaValidatorEngine>();
+        services.AddTransient<IContentValidatorEngine, TwitterContentValidationEngine>();
         
         services.AddScoped<ILinkedInService, LinkedInService>();
         services.AddScoped<IPkceService, PkceService>();
@@ -96,12 +100,10 @@ public static class ServicesConfiguration
         services.AddScoped<IOAuthStateService,  OAuthStateService>();
         services.AddScoped<ITwitterService, TwitterService>();
         
-        //Security services
         services.AddScoped<ITokensCryptographyService, TokensEncryptService>();
         services.AddScoped<IPasswordCryptographyService, PasswordHashService>();
         services.AddSingleton<ICryptographyService, CryptographyService>();
         
-        //OAuth configuration
         services.AddSingleton<ITwitterOAuthConfiguration, TwitterOAuthConfiguration>();
         services.AddSingleton<ILinkedInOAuthConfiguration, LinkedInOAuthConfiguration>();
         services.AddSingleton<ITwitterConfiguration, TwitterConfiguration>();
@@ -160,7 +162,6 @@ public static class ServicesConfiguration
         }.CreateConnectionAsync();
 
         services.AddSingleton<IConnection>(connection);
-        services.Configure<RabbitMqConnection>(d => configuration.GetSection("RabbitMq"));
         
         AddProducers(services);
         AddConsumers(services);

@@ -77,6 +77,8 @@ public class PostValidationConsumer : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var postService = scope.ServiceProvider.GetRequiredService<IPostService>();
 
-        await postService.ValidatePost(postId);
+        var validationResponse = await postService.ValidatePost(postId);
+        
+        
     }
 }

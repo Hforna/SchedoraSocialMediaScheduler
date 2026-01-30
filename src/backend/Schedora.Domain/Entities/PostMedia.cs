@@ -12,6 +12,7 @@ namespace Schedora.Domain.Entities
         public long MediaId { get; private set; }
         public int OrderIndex { get; private set; }
         public string? AltText { get; private set; }
+        public Media? Media { get; private set; }
         
         public PostMedia(long postId, long mediaId, int orderIndex, string altText)
         {
