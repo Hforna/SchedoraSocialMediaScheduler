@@ -82,6 +82,7 @@ public static class ServicesConfiguration
         services.AddScoped<IExternalOAuthAuthenticationService, TwitterExternalOAuthAuthenticationService>();
         services.AddScoped<IExternalOAuthAuthenticationService, LinkedInOAuthAuthenticationService>();
         services.AddScoped<IOAuthTokenService, TwitterExternalOAuthAuthenticationService>();
+        
         services.Configure<TwitterValidationRules>(configuration.GetSection("Twitter:Rules"));
         
         //External Validators
@@ -147,10 +148,10 @@ public static class ServicesConfiguration
     {
         var rabbitMqConnection = new RabbitMqConnection()
         {
-            Host = configuration.GetValue<string>("RabbitMq:host"),
-            UserName = configuration.GetValue<string>("RabbitMq:UserName"),
-            Password = configuration.GetValue<string>("RabbitMq:Password"),
-            Port = configuration.GetValue<int>("RabbitMq:Port"),
+            Host = configuration.GetValue<string>("rabbitMq:Host"),
+            UserName = configuration.GetValue<string>("rabbitMq:UserName"),
+            Password = configuration.GetValue<string>("rabbitMq:Password"),
+            Port = configuration.GetValue<int>("rabbitMq:Port"),
         };
 
         var connection = await new ConnectionFactory()
@@ -188,5 +189,6 @@ public static class ServicesConfiguration
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<ITeamMemberRepository, TeamMemberRepository>();
         services.AddScoped<IStorageRepository, StorageRepository>();
+        services.AddScoped<IPostRepository, PostRepository>();
     }
 }

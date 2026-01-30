@@ -38,7 +38,7 @@ public class MediaService(
         var mediaOriginalName = $"{request.Media.FileName}";
         var mediaName = DefineMediaName(request.MediaName, mediaExtension);
         
-        var mediaBuilder = new MediaBuilder(user.Id, mediaName, mediaInfos.Size, mimeType, "", mediaType, mediaInfos.Width,  mediaInfos.Height);
+        var mediaBuilder = new MediaBuilder(user.Id, mediaName, mediaInfos.Size, mediaExtension, mimeType, "", mediaType, mediaInfos.Width,  mediaInfos.Height);
         mediaBuilder.WithDescription(request.Description);
         mediaBuilder.WithDuration(mediaInfos.Duration);
         mediaBuilder.WithOriginalFileName(mediaOriginalName);

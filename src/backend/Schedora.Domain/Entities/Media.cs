@@ -23,6 +23,7 @@ namespace Schedora.Domain.Entities
             internal decimal? AspectRatio;
             internal long? FolderId;
             internal string? Tags;
+            internal string Format;
             internal string? Description;
             internal bool IsProcessed;
             internal ProcessingStatus ProcessingStatus;
@@ -31,7 +32,7 @@ namespace Schedora.Domain.Entities
             internal int UsageCount;
             internal DateTime? LastUsedAt;
 
-            public MediaBuilder(long userId, string fileName, long fileSize, 
+            public MediaBuilder(long userId, string fileName, long fileSize, string format,
                 string mimeType, string blobUrl, MediaType type, int width, int height)
             {
                 UserId = userId;
@@ -40,6 +41,7 @@ namespace Schedora.Domain.Entities
                 FileSize = fileSize;
                 MimeType = mimeType;
                 BlobUrl = blobUrl;
+                Format = format;
             }
             
             
@@ -99,6 +101,7 @@ namespace Schedora.Domain.Entities
             UsageCount = builder.UsageCount;
             UploadedAt = builder.UploadedAt;
             LastUsedAt = builder.LastUsedAt;
+            Format = builder.Format;
         }
 
         public long UserId { get; private set; }

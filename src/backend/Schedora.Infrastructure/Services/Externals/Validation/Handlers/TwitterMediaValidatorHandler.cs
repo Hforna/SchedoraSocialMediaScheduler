@@ -15,9 +15,9 @@ public class TwitterMediaDimensionsValidationHandler : MediaValidationHandler
 {
     private readonly TwitterValidationRules _rules;
 
-    public TwitterMediaDimensionsValidationHandler(TwitterValidationRules rules)
+    public TwitterMediaDimensionsValidationHandler(IOptions<TwitterValidationRules> rules)
     {
-        _rules = rules;
+        _rules = rules.Value;
     }
 
     public override string Platform { get; set; } = SocialPlatformsNames.Twitter;
@@ -37,9 +37,9 @@ public class TwitterMediaSizeValidationHandler : MediaValidationHandler
     public override string Platform { get; set; } = SocialPlatformsNames.Twitter;
     private readonly TwitterValidationRules _rules;
 
-    public TwitterMediaSizeValidationHandler(TwitterValidationRules rules)
+    public TwitterMediaSizeValidationHandler(IOptions<TwitterValidationRules> rules)
     {
-        _rules = rules;
+        _rules = rules.Value;
     }
 
     public override void Validate(IEnumerable<MediaDescriptorDto> dto)
@@ -64,9 +64,9 @@ public class TwitterMaxMediaValidationHandler : MediaValidationHandler
     public override string Platform { get; set; } = SocialPlatformsNames.Twitter;
     private readonly TwitterValidationRules _rules;
 
-    public TwitterMaxMediaValidationHandler(TwitterValidationRules rules)
+    public TwitterMaxMediaValidationHandler(IOptions<TwitterValidationRules> rules)
     {
-        _rules = rules;
+        _rules = rules.Value;
     }
 
     public override void Validate(IEnumerable<MediaDescriptorDto> dto)
@@ -83,12 +83,12 @@ public class TwitterFormatsValidationHandler : MediaValidationHandler
     public override string Platform { get; set; } = SocialPlatformsNames.Twitter;
     private readonly TwitterValidationRules _rules;
     
-    public TwitterFormatsValidationHandler(TwitterValidationRules rules) => _rules = rules;
+    public TwitterFormatsValidationHandler(IOptions<TwitterValidationRules> rules) => _rules = rules.Value;
     
     public override void Validate(IEnumerable<MediaDescriptorDto> dto)
     {
-        if(dto.Any(d => !_rules.Formats.Contains(d.Format)))
-            Errors.Add($"- The only media formats supported are: {_rules.Formats}");
+        if(dto.Any(d => !_rules.GetFormats().Contains(d.Format)))
+            Errors.Add($"- The only media formats supported are: {_rules.GetFormats()}");
         
         SendNext(dto);
     }
@@ -101,8 +101,10 @@ public class TwitterValidationRules
     public int MaxHeightFile { get; set; }
     public int MaxVideoSizeInMb { get; set; }
     public int TotalMediasAccepted { get; set; }
-    public List<string> Formats { get; set; } = [];
+    public List<string> Formats { private get; set; } = [];
     public int MaxContentLength { get; set; }
     public bool ContentCanBeNull { get; set; } 
+    
+    public string GetFormats() =>  string.Join(", ", Formats);
 }
 
