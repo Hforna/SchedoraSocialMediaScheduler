@@ -13,7 +13,9 @@ using Schedora.Infrastructure;
 using Schedora.Infrastructure.Externals.Services;
 using Schedora.Infrastructure.RabbitMq;
 using Schedora.Infrastructure.Services;
+using Schedora.Infrastructure.Services.Externals;
 using Schedora.WebApi.Helpers;
+using Schedora.WebApi.Middlewares;
 using Schedora.Workers;
 using Swashbuckle.AspNetCore.Filters;
 
@@ -74,6 +76,8 @@ builder.Services.AddSwaggerGen(options =>
     options.ExampleFilters();
 });
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.Limits.MaxRequestBodySize = long.MaxValue;
@@ -121,6 +125,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<TokenValidationParameters>(tokenValidationParameters);
 
 builder.Services.Configure<SmtpConfigurations>(builder.Configuration.GetSection("services:smtp"));
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
@@ -129,6 +134,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseExceptionHandler();
 
 if (app.Configuration.GetValue<bool>("Workers:Enabled"))
 {
