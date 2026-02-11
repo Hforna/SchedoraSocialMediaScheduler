@@ -9,7 +9,9 @@ namespace Schedora.Application.Services;
 public interface IPostService
 {
     public Task<PostResponse> CreatePost(CreatePostRequest request);
-    public Task<List<PostValidationResponseDto>> ValidatePost(long postId);
+    public Task<List<PostValidationDto>> ValidatePost(long postId);
+    public Task<PostValidationResponse> GetPostValidation(long postId);
+    public Task PublishPost(long postId);
 }
 
 public class PostService(
@@ -29,7 +31,7 @@ public class PostService(
     public async Task<PostResponse> CreatePost(CreatePostRequest request)
     {
         var user = await _currentUser.GetUser();
-
+            
         long teamOwnerId = user.Id;
         if (request.TeamContext)
         {
@@ -65,6 +67,7 @@ public class PostService(
         }
 
         var timezone = _currentUser.GetCurrentUserTimeZone();
+        var approvalStatus = (request.TeamContext && user.Id != teamOwnerId) || !request.TeamContext ? ApprovalStatus.NotRequired : ApprovalStatus.Pending;
         var post = Post.Create(request.Content, teamOwnerId, PostStatus.Pending, user.Id, timezone, request.TemplateId);
         
         await _uow.GenericRepository.Add<Post>(post);
@@ -86,6 +89,12 @@ public class PostService(
         
         await _uow.GenericRepository.AddRange<PostPlatform>(postPlatforms);
         await _uow.GenericRepository.AddRange<PostMedia>(postMedias);
+
+        var postValidation = new PostValidation()
+        {
+            PostId = post.Id
+        };
+        await _uow.GenericRepository.Add<PostValidation>(postValidation);
         await _uow.Commit();
 
         await _postProducer.SendPostCreated(post.Id);
@@ -93,12 +102,12 @@ public class PostService(
         return _mapper.Map<PostResponse>(post);
     }
 
-    public async Task<List<PostValidationResponseDto>> ValidatePost(long postId)
+    public async Task<List<PostValidationDto>> ValidatePost(long postId)
     {
         var post = await _uow.PostRepository.GetPostById(postId)
             ?? throw new NotFoundException("Post not found");
 
-        var postValidationResponses = new List<PostValidationResponseDto>();
+        var postValidationResponses = new List<PostValidationDto>();
         
         var postPlatforms = post.Platforms.Select(d => d.Platform).Distinct();
 
@@ -120,22 +129,78 @@ public class PostService(
             {
                 var validationDtos = val.AsEnumerable();
                 var errors = validationDtos.Select(d => d.Errors);
-                var isNotValid = val.Any(d => !d.IsValid);
+                var isValid = val.All(d => d.IsValid);
                 
-                return new PostValidationResponseDto()
+                return new PostValidationDto()
                 {
-                    Errors = string.Join('\n', errors),
+                    Errors = string.Join(Environment.NewLine, errors),
                     Platform = val.Key,
-                    IsValid = isNotValid
+                    IsValid = isValid
                 };
             }).ToList();
 
+        var postValidation = await _uow.PostRepository.GetPostValidationByPost(postId)
+            ?? throw new NotFoundException("Post validation not exists");
+
+        if (postValidationResponses.Any())
+        {
+            postValidation.SetValidations(postValidationResponses);
+            postValidation.SucceedValidation();
+        }
+        
+        _uow.GenericRepository.Update<PostValidation>(postValidation);
+        await _uow.Commit();
+        
         return postValidationResponses;
     }
 
-    private List<PostValidationResponseDto> ValidatePostMedias(List<Media> postMedias, IEnumerable<string> postPlatforms)
+    public async Task<PostValidationResponse> GetPostValidation(long postId)
     {
-        var postValidationResponses = new List<PostValidationResponseDto>();
+        var user = await _currentUser.GetUser();
+        
+        var post =  await _uow.PostRepository.GetPostById(postId) 
+                    ?? throw new NotFoundException("Post not found");
+
+        if(await UserCanAccessPost(post, user))
+            throw new DomainException("User doesn't have permission to access this post");
+
+        var postValidation = await _uow.PostRepository.GetPostValidationByPost(post.Id);
+        
+        return _mapper.Map<PostValidationResponse>(postValidation);
+    }
+
+    public async Task PublishPost(long postId)
+    {
+        var user =  await _currentUser.GetUser();
+        
+        var post = await _uow.PostRepository.GetPostById(postId) 
+                   ??  throw new NotFoundException("Post not found");
+        
+        if(!post.CanBePublished())
+            throw new DomainException("Post cannot be published");
+        
+        if(await UserCanAccessPost(post, user))
+            throw new DomainException("User doesn't have permission to access this post");
+        
+        
+    }
+
+    private async Task<bool> UserCanAccessPost(Post post, User user, TeamMember? userTeam = null)
+    {
+        if (user.Id == post.UserId) 
+            return true;
+        
+        userTeam = userTeam ?? await _uow.TeamMemberRepository.GetByMemberUserId(user.Id);
+
+        if (userTeam is null || userTeam.TeamOwnerId != post.UserId)
+            return false;
+
+        return true;
+    }
+
+    private List<PostValidationDto> ValidatePostMedias(List<Media> postMedias, IEnumerable<string> postPlatforms)
+    {
+        var postValidationResponses = new List<PostValidationDto>();
         
         var mediaEngines = _mediaValidationEngines.Where(d => postPlatforms.Contains(d.Platform));
         if (mediaEngines.Any())
@@ -146,7 +211,7 @@ public class PostService(
             {
                 var (isValid, errors) = mediaEngine.IsValid(mediasDescriptor!);
 
-                var postValidationResponse = new PostValidationResponseDto()
+                var postValidationResponse = new PostValidationDto()
                 {
                     Errors = errors,
                     Platform = mediaEngine.Platform,
@@ -159,11 +224,11 @@ public class PostService(
         return postValidationResponses;
     }
 
-    private List<PostValidationResponseDto> ValidatePostContent(Post post, IEnumerable<string>  postPlatforms)
+    private List<PostValidationDto> ValidatePostContent(Post post, IEnumerable<string>  postPlatforms)
     {
         var validatorEngines = _contentValidatorEngine.Where(d => postPlatforms.Contains(d.Platform));
     
-        var validationResponses = new List<PostValidationResponseDto>();
+        var validationResponses = new List<PostValidationDto>();
         
         if(!validatorEngines.Any())
             return validationResponses;
@@ -172,7 +237,7 @@ public class PostService(
         {
             var validate = engine.Validate(post.Content);
 
-            var validationDto = new PostValidationResponseDto()
+            var validationDto = new PostValidationDto()
             {
                 Platform = engine.Platform,
                 IsValid = validate.IsValid,

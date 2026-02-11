@@ -16,9 +16,9 @@ public class TwitterContentValidationEngine : IContentValidatorEngine
 
     public string Platform { get; set; } = SocialPlatformsNames.Twitter;
 
-    public PostValidationResponseDto Validate(string content)
+    public PostValidationDto Validate(string content)
     {
-        var response = new PostValidationResponseDto()
+        var response = new PostValidationDto()
         {
             IsValid = true,
             Errors = null,

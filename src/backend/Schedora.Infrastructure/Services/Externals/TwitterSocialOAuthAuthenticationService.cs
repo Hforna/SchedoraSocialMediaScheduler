@@ -15,20 +15,22 @@ using Schedora.Infrastructure.Utils;
 
 namespace Schedora.Infrastructure.ExternalServices;
 
-public class TwitterService : ITwitterService
+public class TwitterAccountService : ISocialAccountService
 {
-    public TwitterService(ILogger<TwitterService> logger, IServiceProvider serviceProvider, ITwitterConfiguration configuration)
+    public TwitterAccountService(ILogger<TwitterAccountService> logger, IServiceProvider serviceProvider, ITwitterConfiguration configuration)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
         _configuration = configuration;
     }
 
-    private readonly ILogger<TwitterService> _logger;
+    private readonly ILogger<TwitterAccountService> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly ITwitterConfiguration _configuration;
-    
-    public async Task<SocialAccountInfosDto> GetUserSocialAccountInfos(string accessToken, string tokenType)
+
+    public string Platform { get; } = SocialPlatformsNames.Twitter;
+
+    public async Task<SocialAccountInfosDto> GetSocialAccountInfos(string accessToken, string tokenType)
     {
         using var scope = _serviceProvider.CreateScope();
         var httpClient = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
@@ -60,12 +62,12 @@ public class TwitterService : ITwitterService
     }
 }
 
-public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthenticationService, IOAuthTokenService
+public class TwitterSocialOAuthAuthenticationService : ISocialOAuthAuthenticationService, IOAuthTokenService
 {
     public string Platform { get; } = SocialPlatformsNames.Twitter;
     
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<TwitterExternalOAuthAuthenticationService> _logger;
+    private readonly ILogger<TwitterSocialOAuthAuthenticationService> _logger;
     private readonly IPkceService  _pkceService;
     private readonly ICurrentUserService  _currentUserService;
     private readonly ITwitterOAuthConfiguration _oauthConfig;
@@ -73,7 +75,7 @@ public class TwitterExternalOAuthAuthenticationService : IExternalOAuthAuthentic
     private readonly string _clientId;
     private readonly string _clientSecret;
     
-    public TwitterExternalOAuthAuthenticationService(IServiceProvider serviceProvider, ILogger<TwitterExternalOAuthAuthenticationService> logger, 
+    public TwitterSocialOAuthAuthenticationService(IServiceProvider serviceProvider, ILogger<TwitterSocialOAuthAuthenticationService> logger, 
         IConfiguration configuration, IPkceService pkceService, 
         ICurrentUserService currentUserService, ITwitterOAuthConfiguration oauthConfig, IOAuthStateService oauthStateService)
     {

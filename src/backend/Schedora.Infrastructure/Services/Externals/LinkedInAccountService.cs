@@ -17,15 +17,17 @@ using Schedora.Infrastructure.Utils;
 
 namespace Schedora.Infrastructure.ExternalServices;
 
-public class LinkedInService : ILinkedInService
+public class LinkedInAccountService : ISocialAccountService
 {
-    public LinkedInService(IServiceProvider serviceProvider, ILogger<LinkedInOAuthAuthenticationService> logger)
+    public LinkedInAccountService(IServiceProvider serviceProvider, ILogger<LinkedInOAuthAuthenticationService> logger)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
     }
 
     private const string BaseLinkedInUrl = "https://api.linkedin.com/v2/";
+    
+    public string Platform { get; } = SocialPlatformsNames.LinkedIn;
     
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<LinkedInOAuthAuthenticationService> _logger;
@@ -74,7 +76,7 @@ public class LinkedInService : ILinkedInService
     }
 }
 
-public class LinkedInOAuthAuthenticationService : IExternalOAuthAuthenticationService
+public class LinkedInOAuthAuthenticationService : ISocialOAuthAuthenticationService
 {
     public LinkedInOAuthAuthenticationService(IServiceProvider serviceProvider, ILogger<LinkedInOAuthAuthenticationService> logger, 
         IConfiguration configuration, IOAuthStateService stateService, 

@@ -79,9 +79,9 @@ public static class ServicesConfiguration
             //configuration.GetValue<string>("services:storage:dropbox:apiKey"), 
             //d.CreateScope().ServiceProvider.GetRequiredService<ILogger<DropboxStorageService>>()));
         
-        services.AddScoped<IExternalOAuthAuthenticationService, TwitterExternalOAuthAuthenticationService>();
-        services.AddScoped<IExternalOAuthAuthenticationService, LinkedInOAuthAuthenticationService>();
-        services.AddScoped<IOAuthTokenService, TwitterExternalOAuthAuthenticationService>();
+        services.AddScoped<ISocialOAuthAuthenticationService, TwitterSocialOAuthAuthenticationService>();
+        services.AddScoped<ISocialOAuthAuthenticationService, LinkedInOAuthAuthenticationService>();
+        services.AddScoped<IOAuthTokenService, TwitterSocialOAuthAuthenticationService>();
         
         services.Configure<TwitterValidationRules>(configuration.GetSection("Twitter:Rules"));
         
@@ -95,11 +95,11 @@ public static class ServicesConfiguration
         services.AddTransient<IMediaValidationEngine, TwitterMediaValidatorEngine>();
         services.AddTransient<IContentValidatorEngine, TwitterContentValidationEngine>();
         
-        services.AddScoped<ILinkedInService, LinkedInService>();
+        services.AddScoped<ISocialAccountService, LinkedInAccountService>();
         services.AddScoped<IPkceService, PkceService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IOAuthStateService,  OAuthStateService>();
-        services.AddScoped<ITwitterService, TwitterService>();
+        services.AddScoped<ISocialAccountService, TwitterAccountService>();
         
         services.AddScoped<ITokensCryptographyService, TokensEncryptService>();
         services.AddScoped<IPasswordCryptographyService, PasswordHashService>();

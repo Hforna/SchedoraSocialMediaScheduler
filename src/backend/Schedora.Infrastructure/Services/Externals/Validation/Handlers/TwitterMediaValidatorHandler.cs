@@ -101,7 +101,7 @@ public class TwitterValidationRules
     public int MaxHeightFile { get; set; }
     public int MaxVideoSizeInMb { get; set; }
     public int TotalMediasAccepted { get; set; }
-    public List<string> Formats { private get; set; } = [];
+    public List<string> Formats { private get; set; }
     public int MaxContentLength { get; set; }
     public bool ContentCanBeNull { get; set; } 
     

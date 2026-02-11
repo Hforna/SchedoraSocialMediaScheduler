@@ -14,4 +14,9 @@ public class PostRepository : BaseRepository, IPostRepository
         return await _context.Posts.Include(d => d.Platforms)
             .SingleOrDefaultAsync(d => d.Id == postId);
     }
+
+    public async Task<PostValidation?> GetPostValidationByPost(long postId)
+    {
+        return await _context.PostValidations.SingleOrDefaultAsync(d => d.PostId == postId);
+    }
 }

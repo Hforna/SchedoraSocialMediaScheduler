@@ -2,7 +2,7 @@ using Schedora.Domain.Dtos;
 
 namespace Schedora.Domain.Services;
 
-public interface IExternalOAuthAuthenticationService
+public interface ISocialOAuthAuthenticationService
 {
     public string Platform { get; }
     public Task<string> GetOAuthRedirectUrl(string redirectUrl, string callbackUrl);

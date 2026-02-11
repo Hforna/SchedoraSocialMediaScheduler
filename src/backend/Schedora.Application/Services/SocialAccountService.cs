@@ -20,9 +20,9 @@ public class SocialAccountService : ISocialAccountService
 {
     public SocialAccountService(ILogger<ISocialAccountService> logger, ITokenService tokenService, 
         IMapper mapper, IUnitOfWork uow, 
-        ILinkedInService linkedInService, ISocialAccountProducer socialAccountProducer, 
-        IOAuthStateService oauthStateService, IEnumerable<IExternalOAuthAuthenticationService>  externalOAuthAuthenticationService, 
-        IUserSession userSession, ITwitterService twitterService, ICookiesService cookies, 
+        Domain.Services.ISocialAccountService socialAccountService, ISocialAccountProducer socialAccountProducer, 
+        IOAuthStateService oauthStateService, IEnumerable<ISocialOAuthAuthenticationService>  externalOAuthAuthenticationService, 
+        IUserSession userSession, ITwitterAccountService twitterAccountService, ICookiesService cookies, 
         ISocialAccountCache socialAccountCache, ITokensCryptographyService tokensCryptography, 
         ISocialAccountDomainService  socialAccountDomainService, IActivityLogService activityLogService, ICurrentUserService  currentUserService)
     {
@@ -39,9 +39,9 @@ public class SocialAccountService : ISocialAccountService
         _mapper = mapper;
         _uow = uow;
         _tokensCryptography = tokensCryptography;
-        _linkedInService = linkedInService;
+        _socialAccountService = socialAccountService;
         _socialAccountProducer = socialAccountProducer; 
-        _twitterService = twitterService;
+        _twitterAccountService = twitterAccountService;
     }
 
     private readonly ILogger<ISocialAccountService> _logger;
@@ -53,9 +53,9 @@ public class SocialAccountService : ISocialAccountService
     private readonly ICurrentUserService  _currentUserService;
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _uow;
-    private readonly ILinkedInService  _linkedInService;
-    private readonly ITwitterService  _twitterService;
-    private readonly IEnumerable<IExternalOAuthAuthenticationService> _externalOAuthAuthenticationService;
+    private readonly Domain.Services.ISocialAccountService  _socialAccountService;
+    private readonly ITwitterAccountService  _twitterAccountService;
+    private readonly IEnumerable<ISocialOAuthAuthenticationService> _externalOAuthAuthenticationService;
     private readonly ISocialAccountProducer _socialAccountProducer;
     private readonly IOAuthStateService _oauthStateService;
     private readonly ITokensCryptographyService  _tokensCryptography;
@@ -66,7 +66,7 @@ public class SocialAccountService : ISocialAccountService
         var stateResponse = await GetStateResponse(state, SocialPlatformsNames.LinkedIn);
         var userId = stateResponse.UserId;
         
-        var socialUserInfos = await _linkedInService.GetSocialAccountInfos(dto.AccessToken, "Bearer");
+        var socialUserInfos = await _socialAccountService.GetSocialAccountInfos(dto.AccessToken, "Bearer");
         
         var socialAccountExists = await _uow.SocialAccountRepository.SocialAccountLinkedToUserExists(userId, 
                         socialUserInfos.UserId,
@@ -109,7 +109,7 @@ public class SocialAccountService : ISocialAccountService
         
         var tokensDto = await oauthService.RequestTokensFromOAuthPlatform(code, callbackUrl, codeChallenge);
         
-        var socialInfos = await _twitterService.GetUserSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType);
+        var socialInfos = await _twitterAccountService.GetUserSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType);
         
         var socialAccountExists = await _uow.SocialAccountRepository.SocialAccountLinkedToUserExists(userId, 
             socialInfos.UserId,
