@@ -17,7 +17,7 @@ using Schedora.Infrastructure.Utils;
 
 namespace Schedora.Infrastructure.ExternalServices;
 
-public class LinkedInAccountService : ISocialAccountService
+public class LinkedInAccountService : IExternalSocialAccountService
 {
     public LinkedInAccountService(IServiceProvider serviceProvider, ILogger<LinkedInOAuthAuthenticationService> logger)
     {

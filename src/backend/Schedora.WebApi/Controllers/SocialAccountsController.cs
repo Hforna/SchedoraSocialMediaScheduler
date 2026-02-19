@@ -9,6 +9,7 @@ using Schedora.Domain.Exceptions;
 using Schedora.Domain.Services;
 using Schedora.Domain.Services.Session;
 using Schedora.WebApi.Extensions;
+using ISocialAccountService = Schedora.Application.Services.ISocialAccountService;
 
 namespace Schedora.WebApi.Controllers;
 
@@ -49,7 +50,7 @@ public class SocialAccountsController : ControllerBase
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> ConnectPlatform([FromRoute]string platform, [FromQuery]string redirectUrl, 
-        [FromServices]IEnumerable<IExternalOAuthAuthenticationService> externalAuthenticationService)
+        [FromServices]IEnumerable<ISocialOAuthAuthenticationService> externalAuthenticationService)
     {
         await _socialAccountService.UserCanConnectSocialAccount(platform);
         
@@ -70,7 +71,7 @@ public class SocialAccountsController : ControllerBase
         var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, endpointName);
         var callbackUrl = $"{baseUri}{callbackEndpoint![1..]}";
         
-        var result = await service.GetOAuthRedirectUrl(redirectUrl, callbackUrl);
+        var result = await service.GetOAuthRedirectUrl(redirectUrl, "https://e5f97a8b6c6c.ngrok-free.app/api/social-accounts/twitter/callback");
 
         return Ok(result);
     }
@@ -79,7 +80,7 @@ public class SocialAccountsController : ControllerBase
     [HttpGet("linkedin/callback")]
     [EndpointName("LinkedInCallback")]
     public async Task<IActionResult> LinkedInCallback([FromQuery]string state, [FromQuery]string code,
-        [FromServices]IEnumerable<IExternalOAuthAuthenticationService> externalAuthenticationService)
+        [FromServices]IEnumerable<ISocialOAuthAuthenticationService> externalAuthenticationService)
     {
         var externalService = externalAuthenticationService
             .FirstOrDefault(d => d.Platform.Equals(SocialPlatformsNames.LinkedIn,
@@ -105,7 +106,7 @@ public class SocialAccountsController : ControllerBase
         var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, "TwitterCallback");
         var redirectUri = $"{baseUri}{callbackEndpoint![1..]}";
 
-        await _socialAccountService.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUri);
+        await _socialAccountService.ConfigureOAuthTokensFromOAuthTwitter(state, code, "https://e5f97a8b6c6c.ngrok-free.app/api/social-accounts/twitter/callback");
         
         var stateResponse = await _socialAccountService.GetStateResponse(state, SocialPlatformsNames.Twitter);
         

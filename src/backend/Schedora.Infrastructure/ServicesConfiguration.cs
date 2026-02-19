@@ -95,11 +95,12 @@ public static class ServicesConfiguration
         services.AddTransient<IMediaValidationEngine, TwitterMediaValidatorEngine>();
         services.AddTransient<IContentValidatorEngine, TwitterContentValidationEngine>();
         
-        services.AddScoped<ISocialAccountService, LinkedInAccountService>();
+        services.AddScoped<IExternalSocialAccountService, LinkedInAccountService>();
         services.AddScoped<IPkceService, PkceService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IOAuthStateService,  OAuthStateService>();
-        services.AddScoped<ISocialAccountService, TwitterAccountService>();
+        services.AddScoped<IExternalSocialAccountService, TwitterAccountService>();
+        services.AddScoped<ISocialMediaUploaderService, TwitterMediaService>();
         
         services.AddScoped<ITokensCryptographyService, TokensEncryptService>();
         services.AddScoped<IPasswordCryptographyService, PasswordHashService>();
@@ -177,6 +178,7 @@ public static class ServicesConfiguration
     static void AddConsumers(IServiceCollection services)
     {
         services.AddHostedService<PostValidationConsumer>();
+        services.AddHostedService<PublishPostConsumer>();
     }
 
     static void AddRepositories(IServiceCollection services)

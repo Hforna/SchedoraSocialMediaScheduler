@@ -24,4 +24,12 @@ public class PostsController : ControllerBase
         
         return Created(string.Empty, result);
     }
+
+    [HttpGet("{id:long}/validation")]
+    public async Task<IActionResult> GetPostValidation([FromRoute]long id)
+    {
+        var result = await _postService.GetPostValidation(id);
+        
+        return Ok(result);
+    }
 }

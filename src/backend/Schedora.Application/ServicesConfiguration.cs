@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Schedora.Application.Services;
+using ISocialAccountService = Schedora.Application.Services.ISocialAccountService;
 
 namespace Schedora.Application;
 

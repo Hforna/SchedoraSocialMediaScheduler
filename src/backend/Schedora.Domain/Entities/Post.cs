@@ -48,5 +48,10 @@ namespace Schedora.Domain.Entities
             
             return post;
         }
+
+        public bool CanBePublished()
+        {
+            return Status == PostStatus.Published ||  Status == PostStatus.Publishing;
+        }
     }
 }

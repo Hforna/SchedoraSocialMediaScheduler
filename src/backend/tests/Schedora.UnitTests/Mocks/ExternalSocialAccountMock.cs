@@ -6,8 +6,8 @@ namespace Schedora.UnitTests.Mocks;
 
 public static class ExternalSocialAccountMock
 {
-    public static Mock<IExternalOAuthAuthenticationService> GenerateMock()
+    public static Mock<ISocialOAuthAuthenticationService> GenerateMock()
     {
-        return new Mock<IExternalOAuthAuthenticationService>();
+        return new Mock<ISocialOAuthAuthenticationService>();
     }
 }

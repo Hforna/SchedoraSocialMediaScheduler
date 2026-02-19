@@ -25,4 +25,16 @@ public class PostProducer : BaseProducer, IPostProducer
         
         await _channel.BasicPublishAsync("posts.events.created", "post.created", bytes);
     }
+
+    public async Task SendPublishPost(long postId)
+    {
+        _channel = await _connection.CreateChannelAsync();
+        
+        await _channel.ExchangeDeclareAsync("posts.commands.publish", ExchangeType.Direct, true, false);
+        
+        var serialize = JsonSerializer.Serialize(postId);
+        var bytes = Encoding.UTF8.GetBytes(serialize);
+        
+        await _channel.BasicPublishAsync("posts.commands.publish", "post.publish", bytes);
+    }
 }

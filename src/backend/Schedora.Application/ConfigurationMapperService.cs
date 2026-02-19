@@ -2,6 +2,7 @@
 global using Schedora.Application.Requests;
 global using Schedora.Application.Responses;
 global using Schedora.Domain.Entities;
+using System.Text.Json;
 using Schedora.Domain.Dtos;
 
 namespace Schedora.Application;
@@ -35,5 +36,8 @@ public class ConfigurationMapperService : Profile
         CreateMap<SocialAccount, SocialAccountResponse>();
         CreateMap<Address, AddressResponse>();
         CreateMap<Post, PostResponse>();
+        CreateMap<PostValidation, PostValidationResponse>()
+            .ForMember(d => d.Validations, f =>
+                f.MapFrom(d => d.GetValidations()));
     }
 }

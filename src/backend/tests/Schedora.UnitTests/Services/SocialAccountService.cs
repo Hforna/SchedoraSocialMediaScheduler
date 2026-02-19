@@ -21,45 +21,49 @@ namespace Schedora.UnitTests.Services;
 
 public class SocialAccountServiceTests
 {
-    private ISocialAccountService _service;
-    private Mock<ILogger<ISocialAccountService>> _logger;
+    private Application.Services.ISocialAccountService _service;
+    private Mock<ILogger<Application.Services.ISocialAccountService>> _logger;
     private Mock<ITokenService> _tokenService;
     private Mock<IMapper> _mapper;
     private Mock<IUnitOfWork> _uow;
-    private Mock<ILinkedInService> _linkedInService;
+    private Mock<IExternalSocialAccountService> _linkedInService;
     private Mock<ISocialAccountProducer> _socialAccountProducer;
     private Mock<ISocialAccountCache> _accountCache;
     private Mock<IOAuthStateService> _oauthStateService;
-    private Mock<ITwitterService> _twitterService;
+    private Mock<IExternalSocialAccountService> _twitterService;
     private Mock<ICookiesService> _cookiesService;
     private Mock<ITokensCryptographyService> _tokensCryptography;
     private Mock<ISocialAccountDomainService> _socialAccountDomainService;
     private Mock<IUserSession> _userSession;
-    private List<IExternalOAuthAuthenticationService> _externalOAuthAuthenticationServices;
-    private Mock<IExternalOAuthAuthenticationService> _externalOAuthAuthenticationService;
+    private List<ISocialOAuthAuthenticationService> _externalOAuthAuthenticationServices;
+    private Mock<ISocialOAuthAuthenticationService> _externalOAuthAuthenticationService;
     private Mock<IActivityLogService> _activityLogService;
     private Mock<ICurrentUserService> _currentUserService;
 
     public SocialAccountServiceTests()
     {
-        _logger = new Mock<ILogger<ISocialAccountService>>();
+        _logger = new Mock<ILogger<Application.Services.ISocialAccountService>>();
         _tokenService = new Mock<ITokenService>();
         _mapper = new Mock<IMapper>();
         _uow = new UnitOfWorkMock().GetMock();
-        _linkedInService = new Mock<ILinkedInService>();
+        _linkedInService = new Mock<IExternalSocialAccountService>();
         _socialAccountProducer = new Mock<ISocialAccountProducer>();
         _accountCache = new Mock<ISocialAccountCache>();
         _userSession = new Mock<IUserSession>();
         _oauthStateService = new Mock<IOAuthStateService>();
-        _twitterService = new Mock<ITwitterService>();
+        _twitterService = new Mock<IExternalSocialAccountService>();
         _cookiesService = new Mock<ICookiesService>();
         _tokensCryptography = new Mock<ITokensCryptographyService>();
         _socialAccountDomainService = new Mock<ISocialAccountDomainService>();
-        _externalOAuthAuthenticationService = new Mock<IExternalOAuthAuthenticationService>();
+        _externalOAuthAuthenticationService = new Mock<ISocialOAuthAuthenticationService>();
         _activityLogService = new Mock<IActivityLogService>();
         _currentUserService = new Mock<ICurrentUserService>();
+        _twitterService.Setup(d => d.Platform).Returns(SocialPlatformsNames.Twitter);
+        _linkedInService.Setup(d => d.Platform).Returns(SocialPlatformsNames.LinkedIn);
+        var externalSocialAccounts = new List<IExternalSocialAccountService>()
+            { _twitterService.Object, _linkedInService.Object };
         
-        _externalOAuthAuthenticationServices = new List<IExternalOAuthAuthenticationService>() { _externalOAuthAuthenticationService.Object };
+        _externalOAuthAuthenticationServices = new List<ISocialOAuthAuthenticationService>() { _externalOAuthAuthenticationService.Object };
 
         _service = new SocialAccountService(
             _logger.Object,
@@ -71,7 +75,7 @@ public class SocialAccountServiceTests
             _oauthStateService.Object,
             _externalOAuthAuthenticationServices,
             _userSession.Object,
-            _twitterService.Object,
+            externalSocialAccounts,
             _cookiesService.Object,
             _accountCache.Object,
             _tokensCryptography.Object,
@@ -312,7 +316,7 @@ public class SocialAccountServiceTests
             .ReturnsAsync(tokensDto);
 
         _twitterService
-            .Setup(d => d.GetUserSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType))
+            .Setup(d => d.GetSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType))
             .ReturnsAsync(socialInfos);
 
         _uow.Setup(d =>
@@ -348,7 +352,7 @@ public class SocialAccountServiceTests
             .ReturnsAsync(tokensDto);
 
         _twitterService
-            .Setup(d => d.GetUserSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType))
+            .Setup(d => d.GetSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType))
             .ReturnsAsync(socialInfos);
 
         _uow.Setup(d =>
@@ -387,7 +391,7 @@ public class SocialAccountServiceTests
             .ReturnsAsync(tokensDto);
 
         _twitterService
-            .Setup(d => d.GetUserSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType))
+            .Setup(d => d.GetSocialAccountInfos(tokensDto.AccessToken, tokensDto.TokenType))
             .ReturnsAsync(socialInfos);
 
         _uow.Setup(d =>

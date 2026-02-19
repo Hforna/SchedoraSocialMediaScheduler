@@ -1,6 +1,6 @@
 namespace Schedora.Domain.Dtos;
 
-public class PostValidationResponseDto
+public class PostValidationDto
 {
     public required string Platform { get; set; }
     public bool IsValid { get; set; }

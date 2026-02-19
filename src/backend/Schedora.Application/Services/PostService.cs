@@ -11,7 +11,7 @@ public interface IPostService
     public Task<PostResponse> CreatePost(CreatePostRequest request);
     public Task<List<PostValidationDto>> ValidatePost(long postId);
     public Task<PostValidationResponse> GetPostValidation(long postId);
-    public Task PublishPost(long postId);
+    public Task<PostResponse> PublishPost(long postId);
 }
 
 public class PostService(
@@ -24,7 +24,8 @@ public class PostService(
     IPostProducer _postProducer,
     IEnumerable<IMediaValidationEngine> _mediaValidationEngines,
     ILogger<IPostService> _logger, 
-    IEnumerable<IContentValidatorEngine> _contentValidatorEngine)
+    IEnumerable<IContentValidatorEngine> _contentValidatorEngine
+    )
     : IPostService
 {
 
@@ -169,7 +170,7 @@ public class PostService(
         return _mapper.Map<PostValidationResponse>(postValidation);
     }
 
-    public async Task PublishPost(long postId)
+    public async Task<PostResponse> PublishPost(long postId)
     {
         var user =  await _currentUser.GetUser();
         
@@ -181,8 +182,10 @@ public class PostService(
         
         if(await UserCanAccessPost(post, user))
             throw new DomainException("User doesn't have permission to access this post");
+
+        await _postProducer.SendPublishPost(post.Id);
         
-        
+        return _mapper.Map<PostResponse>(post);
     }
 
     private async Task<bool> UserCanAccessPost(Post post, User user, TeamMember? userTeam = null)

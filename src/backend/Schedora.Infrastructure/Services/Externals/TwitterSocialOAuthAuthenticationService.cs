@@ -15,7 +15,7 @@ using Schedora.Infrastructure.Utils;
 
 namespace Schedora.Infrastructure.ExternalServices;
 
-public class TwitterAccountService : ISocialAccountService
+public class TwitterAccountService : IExternalSocialAccountService
 {
     public TwitterAccountService(ILogger<TwitterAccountService> logger, IServiceProvider serviceProvider, ITwitterConfiguration configuration)
     {
