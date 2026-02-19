@@ -2,6 +2,9 @@ trigger:
   - master
 
 
+variables:
+  greetness: "Job is getting started"
+
 stages:
 - stage: start
   displayName: start
@@ -10,7 +13,7 @@ stages:
       displayName: start
       pool: macschedora
       steps:
-        - bash: echo $(startBuild)
+        - bash: echo $(greetness)
 - stage: build
   dependsOn: start
   jobs:
