@@ -21,7 +21,7 @@ public class TwitterOAuthConfiguration : ITwitterOAuthConfiguration
 
     public string GetScopesAvailable()
     {
-        return "tweet.read users.read offline.access";
+        return "tweet.read users.read offline.access tweet.write media.write";
     }
 }
 

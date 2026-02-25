@@ -101,6 +101,8 @@ public static class ServicesConfiguration
         services.AddScoped<IOAuthStateService,  OAuthStateService>();
         services.AddScoped<IExternalSocialAccountService, TwitterAccountService>();
         services.AddScoped<ISocialMediaUploaderService, TwitterMediaService>();
+        services.AddScoped<ITwitterMediaService, TwitterMediaService>();
+        services.AddScoped<ISocialPostService, TwitterPostService>();
         
         services.AddScoped<ITokensCryptographyService, TokensEncryptService>();
         services.AddScoped<IPasswordCryptographyService, PasswordHashService>();

@@ -2,6 +2,7 @@ namespace Schedora.Application.Responses;
 
 public class PostResponse
 {
+    public long Id { get; set; }
     public long UserId { get; private set; }
     public string Content { get; private set; }
     public PostStatus Status { get; private set; }

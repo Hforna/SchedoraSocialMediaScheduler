@@ -87,7 +87,16 @@ public class TwitterFormatsValidationHandler : MediaValidationHandler
     
     public override void Validate(IEnumerable<MediaDescriptorDto> dto)
     {
-        if(dto.Any(d => !_rules.GetFormats().Contains(d.Format)))
+        var allowedFormats = _rules.GetFormatsList();
+
+        if (allowedFormats.Count == 0)
+        {
+            Errors.Add("- Twitter allowed media formats are not configured.");
+            SendNext(dto);
+            return;
+        }
+
+        if (dto.Any(d => string.IsNullOrWhiteSpace(d.Format) || !allowedFormats.Contains(d.Format.Trim(), StringComparer.OrdinalIgnoreCase)))
             Errors.Add($"- The only media formats supported are: {_rules.GetFormats()}");
         
         SendNext(dto);
@@ -101,10 +110,19 @@ public class TwitterValidationRules
     public int MaxHeightFile { get; set; }
     public int MaxVideoSizeInMb { get; set; }
     public int TotalMediasAccepted { get; set; }
-    public List<string> Formats { private get; set; }
+    
+    public List<string> Formats { get; set; } = new();
+
     public int MaxContentLength { get; set; }
     public bool ContentCanBeNull { get; set; } 
     
-    public string GetFormats() =>  string.Join(", ", Formats);
+    public string GetFormats() => string.Join(", ", Formats ?? new List<string>());
+
+    public List<string> GetFormatsList() =>
+        (Formats ?? new List<string>())
+            .Where(f => !string.IsNullOrWhiteSpace(f))
+            .Select(f => f.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 }
 

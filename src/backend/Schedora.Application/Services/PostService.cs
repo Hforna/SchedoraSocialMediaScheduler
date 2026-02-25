@@ -162,7 +162,7 @@ public class PostService(
         var post =  await _uow.PostRepository.GetPostById(postId) 
                     ?? throw new NotFoundException("Post not found");
 
-        if(await UserCanAccessPost(post, user))
+        if(!await UserCanAccessPost(post, user))
             throw new DomainException("User doesn't have permission to access this post");
 
         var postValidation = await _uow.PostRepository.GetPostValidationByPost(post.Id);
@@ -180,7 +180,7 @@ public class PostService(
         if(!post.CanBePublished())
             throw new DomainException("Post cannot be published");
         
-        if(await UserCanAccessPost(post, user))
+        if(!await UserCanAccessPost(post, user))
             throw new DomainException("User doesn't have permission to access this post");
 
         await _postProducer.SendPublishPost(post.Id);
