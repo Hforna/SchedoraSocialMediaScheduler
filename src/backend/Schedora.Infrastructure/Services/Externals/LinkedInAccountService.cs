@@ -76,7 +76,7 @@ public class LinkedInAccountService : IExternalSocialAccountService
     }
 }
 
-public class LinkedInOAuthAuthenticationService : ISocialOAuthAuthenticationService
+public class LinkedInOAuthAuthenticationService : ISocialOAuthAuthenticationService, IOAuthTokenService
 {
     public LinkedInOAuthAuthenticationService(IServiceProvider serviceProvider, ILogger<LinkedInOAuthAuthenticationService> logger, 
         IConfiguration configuration, IOAuthStateService stateService, 
@@ -101,7 +101,35 @@ public class LinkedInOAuthAuthenticationService : ISocialOAuthAuthenticationServ
 
 
     public string Platform { get; } = SocialPlatformsNames.LinkedIn;
-    
+    public async Task<ExternalServicesTokensDto> RefreshToken(string refreshToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var httpClient = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
+
+        var queryParams = new Dictionary<string, string>()
+        {
+            { "grant_type", "refresh_token" },
+            { "refresh_token", refreshToken },
+            { "client_id", _clientId },
+            { "client_secret", _clientSecret },
+        };
+        
+        var requestUrl = QueryHelpers.AddQueryString($"{_linkedInOAuthConfiguration.GetOAuthUri()}accessToken", queryParams);
+        var response = await httpClient.PostAsync(requestUrl, null);
+
+        var content = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError($"There was an error refreshing the token: {content}");
+            
+            throw new ExternalServiceException("There was an error refreshing the token.");
+        }
+        
+        var deserialize = JsonSerializer.Deserialize<ExternalServicesTokensDto>(content);
+
+        return deserialize;
+    }
+
     public async Task<string> GetOAuthRedirectUrl(string redirectUrl, string callbackUrl)
     {
         using var scope = _serviceProvider.CreateScope();
@@ -151,13 +179,16 @@ public class LinkedInOAuthAuthenticationService : ISocialOAuthAuthenticationServ
             var @params = new FormUrlEncodedContent(queryParams);
             var request =
                 await httpClient.PostAsync($"{_linkedInOAuthConfiguration.GetOAuthUri()}accessToken", @params);
-            request.EnsureSuccessStatusCode();
 
             var content = await request.Content.ReadAsStringAsync();
+            
+            if(!request.IsSuccessStatusCode)
+                throw new ExternalServiceException($"There was an error getting the tokens from the OAuth platform. {content}");
+            
             var response = JsonSerializer.Deserialize<ExternalServicesTokensDto>(content);
 
             if (response is null)
-                throw new ExternalServiceException("Failed to parse response");
+                throw new ExternalServiceException($"Failed to parse response: {content}");
 
             return response;
         }

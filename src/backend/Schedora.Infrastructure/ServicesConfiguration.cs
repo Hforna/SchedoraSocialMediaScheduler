@@ -82,6 +82,7 @@ public static class ServicesConfiguration
         services.AddScoped<ISocialOAuthAuthenticationService, TwitterSocialOAuthAuthenticationService>();
         services.AddScoped<ISocialOAuthAuthenticationService, LinkedInOAuthAuthenticationService>();
         services.AddScoped<IOAuthTokenService, TwitterSocialOAuthAuthenticationService>();
+        services.AddScoped<IOAuthTokenService, LinkedInOAuthAuthenticationService>();
         
         services.Configure<TwitterValidationRules>(configuration.GetSection("Twitter:Rules"));
         

@@ -49,4 +49,39 @@ public class RefreshTokenService
         _uow.GenericRepository.UpdateRange<SocialAccount>(socialAccounts);
         await _uow.Commit();
     }
+    
+    public async Task RegenerateTokens()
+    {
+        using var scope = _serviceProvider.CreateScope();
+
+        var tokensService = scope.ServiceProvider
+            .GetRequiredService<IEnumerable<IOAuthTokenService>>();
+
+        var cryptographyService = scope.ServiceProvider.GetRequiredService<ITokensCryptographyService>();
+        
+        var socialAccounts = await _uow.SocialAccountRepository.GetAllSocialAccounts();
+
+        if (!socialAccounts.Any())
+            return;
+
+        foreach (var socialPlatforms in socialAccounts)
+        {
+            var platformTokenService = tokensService.FirstOrDefault(d => d.Platform.Equals(socialPlatforms.Key));
+            foreach (var socialAccount in socialPlatforms.Value)
+            {
+                if (!string.IsNullOrEmpty(socialAccount.RefreshToken))
+                {
+                    var decrypt = cryptographyService.DecryptToken(socialAccount.RefreshToken);
+                    var tokens = await platformTokenService.RefreshToken(decrypt);
+                
+                    socialAccount.AccessToken = cryptographyService.EncryptToken(tokens.AccessToken);
+                    socialAccount.RefreshToken = cryptographyService.EncryptToken(tokens.RefreshToken);
+                    socialAccount.LastTokenRefreshAt = DateTime.UtcNow;
+                    
+                    _uow.GenericRepository.Update<SocialAccount>(socialAccount);
+                }   
+            }
+        }
+        await _uow.Commit();
+    }
 }

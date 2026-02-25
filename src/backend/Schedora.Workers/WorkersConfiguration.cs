@@ -39,8 +39,8 @@ public class WorkerScheduler : IWorkerScheduler
     public void ScheduleWorks()
     {
         RecurringJob.AddOrUpdate<RefreshTokenService>(                       
-            "refresh-twitter-token-job",                                     
-            d => d.RegenerateTwitterTokens(),                                
+            "refresh-token-job",                                     
+            d => d.RegenerateTokens(),                                
             Cron.Hourly(),                                                   
             new RecurringJobOptions()                                        
             {                                                                

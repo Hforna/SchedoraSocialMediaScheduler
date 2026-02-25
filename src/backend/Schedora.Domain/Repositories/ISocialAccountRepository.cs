@@ -8,4 +8,5 @@ public interface ISocialAccountRepository
     public Task<List<SocialAccount>> GetAllTwitterSocialAccounts();
     public Task<List<SocialAccount>> GetSocialAccountsByIds(List<long> socialAccountIds);
     public Task<List<SocialAccount>> GetAllUserSocialAccounts(long userId);
+    public Task<Dictionary<string, List<SocialAccount>>> GetAllSocialAccounts();
 }

@@ -46,4 +46,10 @@ public class SocialAccountRepository : BaseRepository, ISocialAccountRepository
     {
         return await _context.SocialAccounts.Where(d => d.UserId == userId).ToListAsync();
     }
+
+    public async Task<Dictionary<string, List<SocialAccount>>> GetAllSocialAccounts()
+    {
+        return await _context.SocialAccounts.Where(d => d.LastTokenRefreshAt < DateTime.UtcNow.AddMinutes(-50))
+            .GroupBy(d => d.Platform).ToDictionaryAsync(d => d.Key, f => f.ToList());
+    }
 }
