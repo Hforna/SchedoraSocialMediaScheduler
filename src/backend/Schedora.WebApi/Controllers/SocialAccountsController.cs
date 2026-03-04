@@ -70,8 +70,8 @@ public class SocialAccountsController : ControllerBase
         };
         var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, endpointName);
         var callbackUrl = $"{baseUri}{callbackEndpoint![1..]}";
-        
-        var result = await service.GetOAuthRedirectUrl(redirectUrl, "https://e5f97a8b6c6c.ngrok-free.app/api/social-accounts/twitter/callback");
+
+        var result = await service.GetOAuthRedirectUrl(redirectUrl, callbackUrl);
 
         return Ok(result);
     }
@@ -92,7 +92,7 @@ public class SocialAccountsController : ControllerBase
         
         var stateResponse = await _socialAccountService.GetStateResponse(state, SocialPlatformsNames.LinkedIn);
 
-        var tokensResult = await externalService!.RequestTokensFromOAuthPlatform(code, stateResponse.RedirectUrl);
+        var tokensResult = await externalService!.RequestTokensFromOAuthPlatform(code, redirectUri);
         await _socialAccountService.ConfigureOAuthTokensFromLinkedin(tokensResult, state);
         
         return Ok(stateResponse.RedirectUrl);
@@ -106,7 +106,7 @@ public class SocialAccountsController : ControllerBase
         var callbackEndpoint = _linkGenerator.GetPathByName(HttpContext, "TwitterCallback");
         var redirectUri = $"{baseUri}{callbackEndpoint![1..]}";
 
-        await _socialAccountService.ConfigureOAuthTokensFromOAuthTwitter(state, code, "https://e5f97a8b6c6c.ngrok-free.app/api/social-accounts/twitter/callback");
+        await _socialAccountService.ConfigureOAuthTokensFromOAuthTwitter(state, code, redirectUri);
         
         var stateResponse = await _socialAccountService.GetStateResponse(state, SocialPlatformsNames.Twitter);
         

@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Schedora.Domain.Exceptions;
 
 namespace Schedora.Domain.Entities
 {
@@ -33,25 +34,73 @@ namespace Schedora.Domain.Entities
         {
             var post = new Post()
             {
-                Status =  status,
+                Status = status,
                 CreatedAt = DateTime.UtcNow,
                 Content = content,
                 UserId = userId,
-                CreatedBy =  createdBy,
-                ScheduledTimezone =  scheduledTimezone,
-                TemplateId =  templateId,
-                Notes =  notes,
+                CreatedBy = createdBy,
+                ScheduledTimezone = scheduledTimezone,
+                TemplateId = templateId,
+                Notes = notes,
             };
 
             if (userId != createdBy)
                 post.ApprovalStatus = ApprovalStatus.Pending;
+            else
+                post.ApprovalStatus = ApprovalStatus.NotRequired;
             
             return post;
         }
 
         public bool CanBePublished()
         {
-            return Status == PostStatus.Published ||  Status == PostStatus.Publishing;
+            return Status == PostStatus.Scheduled 
+                   || Status == PostStatus.Publishing;
+        }
+
+        public bool CanBeScheduled()
+        {
+            return Status == PostStatus.Draft
+                   || Status == PostStatus.Pending
+                   || Status == PostStatus.Failed
+                   || Status == PostStatus.Cancelled;
+        }
+
+        public bool CanBeRescheduled()
+        {
+            return Status == PostStatus.Scheduled;
+        }
+
+        public bool CanBeUnscheduled()
+        {
+            return Status == PostStatus.Scheduled;
+        }
+
+        public void Schedule(DateTime scheduledAtUtc, string scheduledTimezone)
+        {
+            if (!CanBeScheduled())
+                throw new DomainException("Post cannot be scheduled in the current status");
+
+            ScheduledAt = scheduledAtUtc;
+            ScheduledTimezone = scheduledTimezone;
+            Status = PostStatus.Scheduled;
+        }
+
+        public void Reschedule(DateTime newScheduledAtUtc)
+        {
+            if (!CanBeRescheduled())
+                throw new DomainException("Post cannot be rescheduled in the current status");
+
+            ScheduledAt = newScheduledAtUtc;
+        }
+
+        public void Unschedule()
+        {
+            if (!CanBeUnscheduled())
+                throw new DomainException("Post cannot be unscheduled in the current status");
+
+            ScheduledAt = null;
+            Status = PostStatus.Pending;
         }
     }
 }

@@ -32,4 +32,36 @@ public class PostsController : ControllerBase
         
         return Ok(result);
     }
+
+    [HttpPost("{id}/publish-now")]
+    public async Task<IActionResult> PublishPostNow([FromRoute]long id)
+    {
+        var result = await _postService.PublishPost(id);
+        
+        return Ok(result);
+    }
+
+    [HttpPost("{id:long}/schedule")]
+    public async Task<IActionResult> SchedulePost([FromRoute] long id, [FromBody] SchedulePostRequest request)
+    {
+        var result = await _postService.SchedulePost(id, request);
+
+        return Ok(result);
+    }
+
+    [HttpPut("{id:long}/schedule")]
+    public async Task<IActionResult> ReschedulePost([FromRoute] long id, [FromBody] ReschedulePostRequest request)
+    {
+        var result = await _postService.ReschedulePost(id, request);
+
+        return Ok(result);
+    }
+
+    [HttpDelete("{id:long}/schedule")]
+    public async Task<IActionResult> UnschedulePost([FromRoute] long id)
+    {
+        var result = await _postService.UnschedulePost(id);
+
+        return Ok(result);
+    }
 }

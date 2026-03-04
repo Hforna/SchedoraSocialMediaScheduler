@@ -37,4 +37,34 @@ public class PostProducer : BaseProducer, IPostProducer
         
         await _channel.BasicPublishAsync("posts.commands.publish", "post.publish", bytes);
     }
+
+    public async Task SendPostScheduled(long postId, DateTime scheduledAtUtc)
+    {
+        _channel = await _connection.CreateChannelAsync();
+
+        await _channel.ExchangeDeclareAsync("posts.events.scheduled", ExchangeType.Direct, true, false);
+
+        var payload = new
+        {
+            PostId = postId,
+            ScheduledAtUtc = scheduledAtUtc
+        };
+
+        var serialize = JsonSerializer.Serialize(payload);
+        var bytes = Encoding.UTF8.GetBytes(serialize);
+
+        await _channel.BasicPublishAsync("posts.events.scheduled", "post.scheduled", bytes);
+    }
+
+    public async Task SendPostUnscheduled(long postId)
+    {
+        _channel = await _connection.CreateChannelAsync();
+
+        await _channel.ExchangeDeclareAsync("posts.events.unscheduled", ExchangeType.Direct, true, false);
+
+        var serialize = JsonSerializer.Serialize(postId);
+        var bytes = Encoding.UTF8.GetBytes(serialize);
+
+        await _channel.BasicPublishAsync("posts.events.unscheduled", "post.unscheduled", bytes);
+    }
 }

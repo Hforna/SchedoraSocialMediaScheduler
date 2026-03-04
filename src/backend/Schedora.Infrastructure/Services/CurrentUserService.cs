@@ -21,7 +21,9 @@ public class CurrentUserService : ICurrentUserService
 
     public string GetCurrentUserTimeZone()
     {
-        //use a geo location api to get user timezone
-        return "to be implemented";
+        // TODO: In the future this should come from user preferences or a geo-location service
+        // based on the incoming request (IP, headers, etc.). For now, we default to UTC,
+        // which is a valid system timezone identifier and keeps scheduling logic stable.
+        return TimeZoneInfo.Utc.Id;
     }
 }

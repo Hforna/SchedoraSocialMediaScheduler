@@ -12,6 +12,9 @@ public interface IPostService
     public Task<List<PostValidationDto>> ValidatePost(long postId);
     public Task<PostValidationResponse> GetPostValidation(long postId);
     public Task<PostResponse> PublishPost(long postId);
+    public Task<PostResponse> SchedulePost(long postId, SchedulePostRequest request);
+    public Task<PostResponse> ReschedulePost(long postId, ReschedulePostRequest request);
+    public Task<PostResponse> UnschedulePost(long postId);
 }
 
 public class PostService(
@@ -185,6 +188,91 @@ public class PostService(
 
         await _postProducer.SendPublishPost(post.Id);
         
+        return _mapper.Map<PostResponse>(post);
+    }
+
+    public async Task<PostResponse> SchedulePost(long postId, SchedulePostRequest request)
+    {
+        var user = await _currentUser.GetUser();
+
+        var post = await _uow.PostRepository.GetPostById(postId)
+                   ?? throw new NotFoundException("Post not found");
+
+        if (!await UserCanAccessPost(post, user))
+            throw new DomainException("User doesn't have permission to access this post");
+
+        if (!post.CanBeScheduled())
+            throw new DomainException("Post cannot be scheduled");
+
+        var timezone = _currentUser.GetCurrentUserTimeZone();
+        var localTime = DateTime.SpecifyKind(request.ScheduledAtLocal, DateTimeKind.Unspecified);
+        var userTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+        var scheduledAtUtc = TimeZoneInfo.ConvertTimeToUtc(localTime, userTimeZoneInfo)
+            .AddSeconds(-TimeZoneInfo.ConvertTimeToUtc(localTime, userTimeZoneInfo).Second);
+
+        _postDomainService.IsPostScheduleValid(scheduledAtUtc);
+
+        post.Schedule(scheduledAtUtc, timezone);
+
+        await _postProducer.SendPostScheduled(post.Id, scheduledAtUtc);
+
+        _uow.GenericRepository.Update<Post>(post);
+        await _uow.Commit();
+
+        return _mapper.Map<PostResponse>(post);
+    }
+
+    public async Task<PostResponse> ReschedulePost(long postId, ReschedulePostRequest request)
+    {
+        var user = await _currentUser.GetUser();
+
+        var post = await _uow.PostRepository.GetPostById(postId)
+                   ?? throw new NotFoundException("Post not found");
+
+        if (!await UserCanAccessPost(post, user))
+            throw new DomainException("User doesn't have permission to access this post");
+
+        if (!post.CanBeRescheduled())
+            throw new DomainException("Post cannot be rescheduled");
+
+        var timezone = post.ScheduledTimezone ?? _currentUser.GetCurrentUserTimeZone();
+        var localTime = DateTime.SpecifyKind(request.ScheduledAtLocal, DateTimeKind.Unspecified);
+        var userTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+        var scheduledAtUtc = TimeZoneInfo.ConvertTimeToUtc(localTime, userTimeZoneInfo)
+            .AddSeconds(-TimeZoneInfo.ConvertTimeToUtc(localTime, userTimeZoneInfo).Second);
+
+        _postDomainService.IsPostScheduleValid(scheduledAtUtc);
+
+        post.Reschedule(scheduledAtUtc);
+
+        await _postProducer.SendPostScheduled(post.Id, scheduledAtUtc);
+
+        _uow.GenericRepository.Update<Post>(post);
+        await _uow.Commit();
+
+        return _mapper.Map<PostResponse>(post);
+    }
+
+    public async Task<PostResponse> UnschedulePost(long postId)
+    {
+        var user = await _currentUser.GetUser();
+
+        var post = await _uow.PostRepository.GetPostById(postId)
+                   ?? throw new NotFoundException("Post not found");
+
+        if (!await UserCanAccessPost(post, user))
+            throw new DomainException("User doesn't have permission to access this post");
+
+        if (!post.CanBeUnscheduled())
+            throw new DomainException("Post cannot be unscheduled");
+
+        post.Unschedule();
+
+        await _postProducer.SendPostUnscheduled(post.Id);
+
+        _uow.GenericRepository.Update<Post>(post);
+        await _uow.Commit();
+
         return _mapper.Map<PostResponse>(post);
     }
 
